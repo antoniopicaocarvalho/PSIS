@@ -90,33 +90,43 @@ board_info board_read() {
    game_board.cols = col;
    game_board.lines = line;
 
-   int board[line][col];
-   memset( board, 0 ,line*col*sizeof(int));
+   /*int board[line][col];
+   memset( board, 0 ,line*col*sizeof(int));*/
 
    char letter;
 
-   int j = 0;
-   int i = -1;
+   	char ** board;
+	int i, j;
+	board = malloc(sizeof(char *) * line);
+	for ( i = 0 ; i < line; i++){
+		board[i] = malloc (sizeof(char) * (col+1));
+		for (j = 0; j < col; j++){
+			board[i][j] = ' ';
+		}
+		board[i][j] = '\0';
 
-   while( (letter = getc(fp)) != EOF){
-      
+	}
+
+	j = 0;
+    i = -1;
+
+   while( (letter = getc(fp)) != EOF){    
       //Block
-      if(letter == 'B') game_board.board[i][j] = 1;
-
+      if(letter == 'B') board[i][j] = 'B';
       //New Column
       j++;
-
       //New Line
       if (letter == '\n'){
          i++;
          j = 0;
       } 
    }
+   game_board.board = board;
 
    fclose(fp);
 
    // Teste
-   int row, columns;
+  /* int row, columns;
    for (row=0; row<line; row++)
    {
        for(columns=0; columns<col; columns++)
@@ -124,7 +134,7 @@ board_info board_read() {
             printf("%d ", game_board.board[row][columns]);
        }
        printf("\n");
-   } 
+   } */
 
    return game_board;
 }
@@ -167,7 +177,7 @@ int main(int argc, char* argv[]){
 	printf("board %d * %d \n", dim[0], dim[1]);
 
 
-	//INIT estrutura estrutura da lista de jogadores
+	//INIT estrutura da lista de jogadores
 	player_id * head;
 	pid_t npid;
 
@@ -186,7 +196,12 @@ int main(int argc, char* argv[]){
 
 		n_player++;
 		printf("\nTEMOS %d CRL\n", n_player);
-		send(client_sock, &dim, sizeof(dim), 0);
+
+		/*SERIALIZE STRUCTURE*/
+
+		send(client_sock, &new_board, sizeof(board_info), 0);
+
+		
 
 		if (err_rcv = recv(client_sock, &npid, sizeof(npid), 0)>0){
 			printf("recebeu o pid -  %d \n", npid);
@@ -279,7 +294,11 @@ player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player
 }
 
 
+array_de_ints serialize(board_info new_board){
 
+	size = 2 + new_board 
+	new_board.cols = dim
+}
 	 
 
 

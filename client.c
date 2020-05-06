@@ -152,16 +152,19 @@ int main(int argc, char * argv[]){
 
 	sock_fd = connect_server (sock_fd, server_addr);
 
-	int dim[2];
+	board_info new_board;
+	//int dim[2];
 	int err_rcv;
 
 	pid_t npid = getpid();
+	printf("o meu pid é %d \n", npid);
 
 
-	if (err_rcv = recv(sock_fd, &dim, sizeof(dim), 0)>0){
-		printf("received %d bytes %d %d \n", err_rcv,  dim[0], dim[1]);
-		create_board_window(dim[0], dim[1]);
+	if (err_rcv = recv(sock_fd, &new_board, sizeof(board_info), 0)>0){
+		//printf("received %d bytes %d %d \n", err_rcv,  dim[0], dim[1]);	
+		board_init(new_board);
 	}
+
 	send(sock_fd, &npid, sizeof(npid), 0);
 
 	int done = 0;
@@ -181,6 +184,26 @@ int main(int argc, char * argv[]){
 
 
 
+
+char** board_init(board_info new_board) {
+
+	int cols = new_board.cols;
+	int lines = new_board.lines;
+	char ** board = new_board.board;
+
+	create_board_window(cols, lines);
+
+	for (int i = 0; i < cols; ++i)
+	{
+		for (int j = 0; j < lines; ++j)
+		{
+			if (board[i][j] == 'B') 
+				paint_brick(i,j);
+				
+		}
+	}
+
+}
 
 
 

@@ -20,12 +20,17 @@ typedef struct player_id{
 } player_id;
 
 
+
+
 typedef struct board_info{
 	int cols;
 	int lines;
-	int board[1000][1000];
+	char ** board;
 
 } board_info;
+
+
+
 
 typedef struct sock_adds{ 
 	int player_sock;
@@ -35,3 +40,5 @@ typedef struct sock_adds{
 
 
 player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player, int dim[]);
+
+char** board_init(board_info new_board);
