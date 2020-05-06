@@ -152,7 +152,8 @@ int main(int argc, char * argv[]){
 
 	sock_fd = connect_server (sock_fd, server_addr);
 
-	board_info new_board;
+	int msg[MAX_SIZE];
+
 	//int dim[2];
 	int err_rcv;
 
@@ -160,8 +161,9 @@ int main(int argc, char * argv[]){
 	printf("o meu pid é %d \n", npid);
 
 
-	if (err_rcv = recv(sock_fd, &new_board, sizeof(board_info), 0)>0){
-		//printf("received %d bytes %d %d \n", err_rcv,  dim[0], dim[1]);	
+	if (err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
+		//printf("received %d bytes %d %d \n", err_rcv,  dim[0], dim[1]);
+		board_info new_board = un_serialize(msg);	
 		board_init(new_board);
 	}
 
@@ -185,7 +187,7 @@ int main(int argc, char * argv[]){
 
 
 
-char** board_init(board_info new_board) {
+void board_init(board_info new_board) {
 
 	int cols = new_board.cols;
 	int lines = new_board.lines;
@@ -205,6 +207,10 @@ char** board_init(board_info new_board) {
 
 }
 
+board_info un_serialize (int msg[]){
+
+	/*TRADUZIR MSG PARA ESTRUTURA BOARD_INFO*/
+}
 
 
 

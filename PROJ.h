@@ -1,6 +1,9 @@
  #include <sys/types.h>
  #include <unistd.h>
 
+#define MAX_SIZE 1000000
+
+
 
 typedef struct ex4_message{
 	int character;
@@ -26,6 +29,7 @@ typedef struct board_info{
 	int cols;
 	int lines;
 	char ** board;
+	int dim[MAX_SIZE];
 
 } board_info;
 

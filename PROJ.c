@@ -184,6 +184,8 @@ int main(int argc, char* argv[]){
 	pthread_t thread_id;
 	int err_rcv;
 
+	int dim[];
+
 
 	
 	while(1){ 
@@ -198,8 +200,9 @@ int main(int argc, char* argv[]){
 		printf("\nTEMOS %d CRL\n", n_player);
 
 		/*SERIALIZE STRUCTURE*/
+		serialize(new_board);
 
-		send(client_sock, &new_board, sizeof(board_info), 0);
+		send(client_sock, &new_board.dim, sizeof(new_board.dim), 0);
 
 		
 
@@ -293,15 +296,28 @@ player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player
 
 }
 
+void serialize(board_info new_board){
 
-array_de_ints serialize(board_info new_board){
+	int size = 2 + new_board.cols*new_board.lines;
+	int dim[size];
+	int v = 2;
 
-	size = 2 + new_board 
-	new_board.cols = dim
+	dim[0] = new_board.lines;
+	dim[1] = new_board.cols;
+
+	for (int i = 0; i < new_board.lines; ++i)
+	{
+		for (int j = 0; j < new_board.cols; ++j)
+		{			
+			if(new_board.board[i][j] = 'B') dim[v] = 1;
+			else dim[v] = 0;
+
+			v++;
+		}		
+	}
+
+	strcpy(new_board.dim, dim);
 }
-	 
-
-
 	
 		
 
