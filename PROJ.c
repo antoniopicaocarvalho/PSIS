@@ -146,7 +146,7 @@ board_info board_read() {
 
 
 
-player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player, int dim[]){
+player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player, int dim[], board_info new_board){
 
 	if (head == NULL) {	  			//lista vazia - primeiro jogador
 		head = malloc(sizeof(player_id));
@@ -161,10 +161,17 @@ player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player
 		
 		head -> pos_pacman[0]=rand()%dim[0];
 		head -> pos_pacman[1]=rand()%dim[1];
+		while (new_board.board[head->pos_pacman[0]][head->pos_pacman[1]] != ' '){ 
+			head -> pos_pacman[0]=rand()%dim[0];
+			head -> pos_pacman[1]=rand()%dim[1];
+		}
 
 		head -> pos_monster[0]=rand()%dim[0];
 		head -> pos_monster[1]=rand()%dim[1];
-
+		while (new_board.board[head->pos_monster[0]][head->pos_monster[1]] != ' '){ 
+			head -> pos_monster[0]=rand()%dim[0];
+			head -> pos_monster[1]=rand()%dim[1];
+		}
 
 		head -> rgb[0] = rand()%255;
 		head -> rgb[1] = rand()%255;
@@ -179,7 +186,7 @@ player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player
 		//verificar que e um novo jogador
 		player_id* run = head;
 
-		while (run -> player_pid != npid){					//nao é o primeiro
+		while (run -> player_pid != npid){		//TALVEZ TENHA DE TROCAR PARA =! NULL
 
 			if(run -> next == NULL){
 														//se sim adicionalo a lista, preenche-lo e retornalo
@@ -189,14 +196,20 @@ player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player
 				run -> next -> player_pid = npid;
 				run -> next -> player_n = n_player;
 
-			//FALTA FUNCAO QUE CORRE BOARD E VERIFICA POSICOES DISPONIVEIS 
-
+			run -> next -> pos_pacman[0]=rand()%dim[0];
+			run -> next -> pos_pacman[1]=rand()%dim[1];
+			while (new_board.board[head->pos_pacman[0]][head->pos_pacman[1]] != ' '){ 
 				run -> next -> pos_pacman[0]=rand()%dim[0];
 				run -> next -> pos_pacman[1]=rand()%dim[1];
+			}
 
+			run -> next -> pos_monster[0]=rand()%dim[0];
+			run -> next -> pos_monster[1]=rand()%dim[1];
+			while (new_board.board[head->pos_monster[0]][head->pos_monster[1]] != ' '){ 
 				run -> next -> pos_monster[0]=rand()%dim[0];
 				run -> next -> pos_monster[1]=rand()%dim[1];
-				
+			}
+
 				run -> next -> rgb[0] = rand()%255;
 				run -> next -> rgb[1] = rand()%255;
 				run -> next -> rgb[2] = rand()%255;
@@ -407,6 +420,10 @@ int main(int argc, char* argv[]){
 	int err_rcv;
 
 
+
+
+
+
 	while(1){ 
 
     	client_sock = accept(sock_fd, (struct sockaddr*)&client, &size);
@@ -430,20 +447,52 @@ int main(int argc, char* argv[]){
 		if ( (err_rcv = recv(client_sock, &npid, sizeof(npid), 0)) > 0 ){
 			printf("recebeu o pid -  %d \n", npid);
 
-			head = new_player(npid, client_sock, head, n_player, dim);   //ADD PLAYER TO LIST OF player_id
-
-			//Verificar se a lista esta a ficar feita
-			player_id * aux = head;
-			while(aux){
-				printf("O jogador %d esta na lista\n", aux->player_n);
-				aux = aux -> next;
+			/*VERIFICAR SE HA ESPACO PARA MAIS 1 PLAYER*/
+			if (new_board.cols*new_board.lines - new_board.bricks < n_player*2){
+				printf("CAN'T FIT ANOTHER ONE -- DJ KHALED  \n");
 			}
+			else{ 
 
+				head = new_player(npid, client_sock, head, n_player, dim, new_board);   //ADD PLAYER TO LIST OF player_id
+				
+				int pos[2];
+				int rgb[3];
+				pos[0] = head -> pos_pacman[0];
+				pos[1] = head -> pos_pacman[1];
+				rgb[0] = head -> rgb[0];
+				rgb[1] = head -> rgb[1];
+				rgb[2] = head -> rgb[2];
+
+				send(client_sock, &rgb, sizeof(rgb), 0);
+
+				new_board = board_update ('P', new_board, pos);
+				send(client_sock, &pos, sizeof(pos), 0);
+			
+				pos[0] = head -> pos_monster[0];
+				pos[1] = head -> pos_monster[1];
+				new_board = board_update ('M', new_board, pos);
+				send(client_sock, &pos, sizeof(pos), 0);
+
+
+
+
+				//Verificar se a lista esta a ficar feita
+				/*player_id * aux = head;
+				while(aux){
+					printf("O jogador %d esta na lista\n", aux->player_n);
+					aux = aux -> next;
+				}*/
+			}
 		}
-
-		
-
  	}
  	return (0);	
 }
 
+
+board_info board_update (char item, board_info board, int pos[2]){
+
+	/*PRIMEIRAS POSIÇOES*/
+	board.board[pos[0]][pos[1]] = item;
+	return(board);
+
+}

@@ -197,22 +197,24 @@ int main(int argc, char * argv[]){
     SDL_Event event;
 
 	struct sockaddr_in server_addr = make_socket(&sock_fd);
-
 	inet_aton(argv[1], &server_addr.sin_addr);
-
 	sock_fd = connect_server (sock_fd, server_addr);
 
+	int rgb[3];
 	int msg[2];
-
-	//int dim[2];
 	int err_rcv;
+
+	int dim[2];
 
 	pid_t npid = getpid();
 	printf("o meu pid é %d \n", npid);
 	int n_bricks = 0;
+
 	//Recebe linhas e colunas
 	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
 		
+		dim[0] = msg[0];
+		dim[1] = msg[1];
 		create_board_window(msg[0],msg[1]);
 		printf("Board criada!!!\n"); 
 	}
@@ -229,6 +231,22 @@ int main(int argc, char * argv[]){
 	printf("Board Concluida\n");
 
 	send(sock_fd, &npid, sizeof(npid), 0);
+
+	//Recebe cor
+	if(err_rcv = recv(sock_fd, &rgb, sizeof(rgb), 0)>0){
+		printf("recebeu cor ou caraças\n");
+		
+	}
+
+	//Recebe pos_pacman e pinta
+	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) 
+		paint_pacman(msg[0],msg[1], rgb[0], rgb[1], rgb[2]);
+
+	//Recebe pos_monster e pinta
+	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) 
+		paint_monster(msg[0],msg[1], rgb[0], rgb[1], rgb[2]);
+
+
 
 	int done = 0;
 	

@@ -42,6 +42,12 @@ typedef struct sock_adds{
 }sock_adds;
 
 
-player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player, int dim[]);
+player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player, int dim[], board_info new_board);
 
 char** board_init(board_info new_board);
+
+void send_board(int client_sock, board_info new_board);
+
+board_info board_read();
+
+board_info board_update (char item, board_info board, int pos[2]);
