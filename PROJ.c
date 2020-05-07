@@ -88,7 +88,7 @@ board_info board_read() {
 
    game_board.cols = col;
    game_board.lines = line;
-
+   game_board.bricks = 0;
    /*int board[line][col];
    memset( board, 0 ,line*col*sizeof(int));*/
 
@@ -113,6 +113,7 @@ board_info board_read() {
 		//Block
 		if(letter == 'B') {
 			board[i][j] = 'B';
+			game_board.bricks++;
 		}
 		//New Column
 		j++;
@@ -125,20 +126,6 @@ board_info board_read() {
     game_board.board = board;
 
    	int v = 2;
-
-	game_board.dim[0] = line;
-	game_board.dim[1] = col;
-
-	for (int i = 0; i < game_board.lines; ++i)
-	{
-		for (int j = 0; j < game_board.cols; ++j)
-		{			
-			if(game_board.board[i][j] == 'B') game_board.dim[v] = 1;
-			else game_board.dim[v] = 0;
-
-			v++;
-		}		
-	}
 
    fclose(fp);
 
@@ -253,7 +240,7 @@ board_info serialize(board_info new_board){
 	return new_board;
 }*/
 
-void display_(board_info new_board){
+/*void display_(board_info new_board){
 	
 	printf("\n");
 
@@ -267,7 +254,7 @@ void display_(board_info new_board){
 	}
 
 	printf("\n");
-}
+}*/
 	
 /*
 
@@ -359,6 +346,11 @@ void send_board(int client_sock, board_info new_board){
 	//Envia Lines and cols 
 	send(client_sock, &dim, sizeof(dim), 0);
 
+	//Envia o numero de bricks
+	dim[0] = new_board.bricks;
+	printf("%d\n", dim[0]);
+	send(client_sock, &dim, sizeof(dim), 0);
+
 	//Envia as coordenadas do Brick
 	for (int i = 0; i < new_board.lines; ++i)
 	{
@@ -428,8 +420,7 @@ int main(int argc, char* argv[]){
 
 		/*SERIALIZE STRUCTURE*/
 
-		display_(new_board);
-		
+		//display_(new_board);
 	
 		//send(client_sock, &new_board.dim, sizeof(new_board.dim), 0);
 

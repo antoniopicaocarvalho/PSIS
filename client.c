@@ -209,21 +209,23 @@ int main(int argc, char * argv[]){
 
 	pid_t npid = getpid();
 	printf("o meu pid é %d \n", npid);
-
-	int flag = 0;
-	while(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
-		//printf("received %d bytes %d %d \n", err_rcv,  dim[0], dim[1]);
-		//board_info new_board = un_serialize(msg);	
-		//printf("Recebeu\n");
-		//printf("Menssagem recebida: %d %d %d\n", msg[0],msg[1],msg[2]);
-		if (flag == 0){
-			create_board_window(msg[0],msg[1]);
-			printf("Board criada!!!\n\n");
-		} 	
-		else paint_brick(msg[0],msg[1]);
+	int n_bricks = 0;
+	//Recebe linhas e colunas
+	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
 		
-		flag = 1;
+		create_board_window(msg[0],msg[1]);
+		printf("Board criada!!!\n"); 
 	}
+	//Recebe numero de Bricks
+	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
+		printf("Há %d Bricks!!!\n",msg[0]); 
+		n_bricks = msg[0];
+	}
+	//Pinta os Bricks
+	for(int i = 0; i < n_bricks ; i++){
+		if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_brick(msg[0],msg[1]);
+	}
+
 	printf("Board Concluida\n");
 
 	send(sock_fd, &npid, sizeof(npid), 0);

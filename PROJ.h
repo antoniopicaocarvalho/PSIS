@@ -29,7 +29,7 @@ typedef struct board_info{
 	int cols;
 	int lines;
 	char ** board;
-	int dim[MAX_SIZE];
+	int bricks;
 
 } board_info;
 
