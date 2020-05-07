@@ -35,7 +35,6 @@ typedef struct board_info{
 
 
 
-
 typedef struct sock_adds{ 
 	int player_sock;
 	int dim_board[2];

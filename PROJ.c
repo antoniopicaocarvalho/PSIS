@@ -67,7 +67,6 @@ int server_socket;
 
 board_info board_read() {
 
-	int n_lines, n_cols;
 	int col;
 	int line;
 
@@ -139,92 +138,6 @@ board_info board_read() {
    return game_board;
 }
 
-
-
-
-
-int main(int argc, char* argv[]){
-
-	SDL_Event event;
-	int done = 0;
-	int is_server = 1;
-
-	Event_ShowCharacter = SDL_RegisterEvents(1);
-	//Leitura do ficheiro BOARD.TXT
-	board_info new_board;
-	new_board = board_read();
-
-
-	//Criação da Socket
-	struct sockaddr_in local_addr = make_socket(&sock_fd);
-	local_addr.sin_addr.s_addr= INADDR_ANY;
-	sock_fd = Do_Bind(sock_fd, local_addr);
-	Do_Listen(sock_fd);
-
-	printf("Waiting for players...\n");
-
-
-
-	struct sockaddr_in client;
-	socklen_t size = sizeof (struct sockaddr_in);
-
-	int n_player=0;
-	int client_sock;
-
-	int dim[2];
-	dim[0] = new_board.cols;
-	dim[1] = new_board.lines;
-	printf("board %d * %d \n", dim[0], dim[1]);
-
-
-	//INIT estrutura da lista de jogadores
-	player_id * head;
-	pid_t npid;
-
-	pthread_t thread_id;
-	int err_rcv;
-
-	int dim[];
-
-
-	
-	while(1){ 
-
-    	client_sock = accept(sock_fd, (struct sockaddr*)&client, &size);
-		if( client_sock == -1 ){
-			perror("accept");
-			exit(-1);
-		}
-
-		n_player++;
-		printf("\nTEMOS %d CRL\n", n_player);
-
-		/*SERIALIZE STRUCTURE*/
-		serialize(new_board);
-
-		send(client_sock, &new_board.dim, sizeof(new_board.dim), 0);
-
-		
-
-		if (err_rcv = recv(client_sock, &npid, sizeof(npid), 0)>0){
-			printf("recebeu o pid -  %d \n", npid);
-
-			head = new_player(npid, client_sock, head, n_player, dim);   /*ADD PLAYER TO LIST OF player_id*/
-
-			/*Verificar se a lista esta a ficar feita*/
-			player_id * aux = head;
-			while(aux){
-				printf("O jogador %d esta na lista\n", aux->player_n);
-				aux = aux -> next;
-			}
-
-		}
-
-		
-
- 	}
- 	return (0);	
-}
 
 
 
@@ -309,14 +222,14 @@ void serialize(board_info new_board){
 	{
 		for (int j = 0; j < new_board.cols; ++j)
 		{			
-			if(new_board.board[i][j] = 'B') dim[v] = 1;
+			if(new_board.board[i][j] == 'B') dim[v] = 1;
 			else dim[v] = 0;
 
 			v++;
 		}		
 	}
 
-	strcpy(new_board.dim, dim);
+	memcpy(new_board.dim, dim, size);
 }
 	
 		
@@ -402,3 +315,91 @@ void serialize(board_info new_board){
 	exit(0);
 }
 */
+
+
+
+
+int main(int argc, char* argv[]){
+
+	//SDL_Event event;
+	//int done = 0;
+	//int is_server = 1;
+
+	Event_ShowCharacter = SDL_RegisterEvents(1);
+	//Leitura do ficheiro BOARD.TXT
+	board_info new_board;
+	new_board = board_read();
+
+
+	//Criação da Socket
+	struct sockaddr_in local_addr = make_socket(&sock_fd);
+	local_addr.sin_addr.s_addr= INADDR_ANY;
+	sock_fd = Do_Bind(sock_fd, local_addr);
+	Do_Listen(sock_fd);
+
+	printf("Waiting for players...\n");
+
+	struct sockaddr_in client;
+	socklen_t size = sizeof (struct sockaddr_in);
+
+	int n_player=0;
+	int client_sock;
+
+	int dim[2];
+	dim[0] = new_board.cols;
+	dim[1] = new_board.lines;
+	printf("board %d * %d \n", dim[0], dim[1]);
+
+
+	//INIT estrutura da lista de jogadores
+	player_id * head;
+	pid_t npid;
+
+	//pthread_t thread_id;
+	int err_rcv;
+	int messg[MAX_SIZE];
+
+	while(1){ 
+
+    	client_sock = accept(sock_fd, (struct sockaddr*)&client, &size);
+		if( client_sock == -1 ){
+			perror("accept");
+			exit(-1);
+		}
+
+		n_player++;
+		printf("\nTEMOS %d CRL\n", n_player);
+
+		/*SERIALIZE STRUCTURE*/
+		serialize(new_board);
+		
+		/*ERRO - nao da para enviar na funcao SEND() um array de inteiros (numa estrutura)!!
+		Temos de alterar o dim, visto que no send(__, XXXX, sizeof(XXXX), 0) o XXXX tem de 
+		que ser uma estrutura de inteiros sem ser arrays*/
+
+		memcpy(messg,new_board.dim, 2 + new_board.cols*new_board.lines);
+		
+		send(client_sock, &messg, sizeof(messg), 0);
+
+		
+
+		if ( (err_rcv = recv(client_sock, &npid, sizeof(npid), 0)) > 0 ){
+			printf("recebeu o pid -  %d \n", npid);
+
+			head = new_player(npid, client_sock, head, n_player, dim);   //ADD PLAYER TO LIST OF player_id
+
+			//Verificar se a lista esta a ficar feita
+			player_id * aux = head;
+			while(aux){
+				printf("O jogador %d esta na lista\n", aux->player_n);
+				aux = aux -> next;
+			}
+
+		}
+
+		
+
+ 	}
+ 	return (0);	
+}
+

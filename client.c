@@ -136,6 +136,56 @@ void * clientThread(void* argc){
 
 
 /*---------------------------------------client.c---------------------------------------------------------*/
+void create_board(board_info new_board) {
+
+	int cols = new_board.cols;
+	int lines = new_board.lines;
+	char ** board = new_board.board;
+
+	create_board_window(cols, lines);
+
+	for (int i = 0; i < cols; ++i)
+	{
+		for (int j = 0; j < lines; ++j)
+		{
+			if (board[i][j] == 'B') 
+				paint_brick(i,j);
+				
+		}
+	}
+                        
+}
+
+struct board_info un_serialize(int msg[]){
+
+	struct board_info board;
+
+	board.lines = msg[0];
+	board.cols = msg[1];
+	
+	int v = 2;
+	int i,j;
+	for (i = 0; i < board.lines; ++i)
+	{
+		for (j = 0; j < board.cols; ++j)
+		{			
+			if( msg[v] == 1 ) board.board[i][j] = 'B';
+			else board.board[i][j] = ' ';
+			v++;
+		}
+
+		board.board[i][j] = '\0';	
+	}
+
+	return board;
+
+	/*TRADUZIR MSG PARA ESTRUTURA BOARD_INFO*/
+}
+
+
+
+
+
 int main(int argc, char * argv[]){
 
 
@@ -164,7 +214,7 @@ int main(int argc, char * argv[]){
 	if (err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
 		//printf("received %d bytes %d %d \n", err_rcv,  dim[0], dim[1]);
 		board_info new_board = un_serialize(msg);	
-		board_init(new_board);
+		create_board(new_board);
 	}
 
 	send(sock_fd, &npid, sizeof(npid), 0);
@@ -185,36 +235,6 @@ int main(int argc, char * argv[]){
 }
 
 
-
-
-void board_init(board_info new_board) {
-
-	int cols = new_board.cols;
-	int lines = new_board.lines;
-	char ** board = new_board.board;
-
-	create_board_window(cols, lines);
-
-	for (int i = 0; i < cols; ++i)
-	{
-		for (int j = 0; j < lines; ++j)
-		{
-			if (board[i][j] == 'B') 
-				paint_brick(i,j);
-				
-		}
-	}
-
-}
-
-board_info un_serialize (int msg[]){
-
-	/*TRADUZIR MSG PARA ESTRUTURA BOARD_INFO*/
-}
-
-
-
-	
 	/*
 	struct sockaddr_in server_addr =  make_socket (&sock_fd);//--------------------------------Socket	    
 	inet_aton(argv[1], &server_addr.sin_addr);
