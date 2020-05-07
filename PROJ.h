@@ -1,7 +1,7 @@
  #include <sys/types.h>
  #include <unistd.h>
 
-#define MAX_SIZE 1000000
+#define MAX_SIZE 100000
 
 
 

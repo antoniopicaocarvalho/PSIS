@@ -202,7 +202,7 @@ int main(int argc, char * argv[]){
 
 	sock_fd = connect_server (sock_fd, server_addr);
 
-	int msg[MAX_SIZE];
+	int msg[2];
 
 	//int dim[2];
 	int err_rcv;
@@ -210,12 +210,21 @@ int main(int argc, char * argv[]){
 	pid_t npid = getpid();
 	printf("o meu pid é %d \n", npid);
 
-
-	if (err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
+	int flag = 0;
+	while(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
 		//printf("received %d bytes %d %d \n", err_rcv,  dim[0], dim[1]);
-		board_info new_board = un_serialize(msg);	
-		create_board(new_board);
+		//board_info new_board = un_serialize(msg);	
+		//printf("Recebeu\n");
+		//printf("Menssagem recebida: %d %d %d\n", msg[0],msg[1],msg[2]);
+		if (flag == 0){
+			create_board_window(msg[0],msg[1]);
+			printf("Board criada!!!\n\n");
+		} 	
+		else paint_brick(msg[0],msg[1]);
+		
+		flag = 1;
 	}
+	printf("Board Concluida\n");
 
 	send(sock_fd, &npid, sizeof(npid), 0);
 

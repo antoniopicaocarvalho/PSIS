@@ -109,18 +109,36 @@ board_info board_read() {
 	j = 0;
     i = -1;
 
-   while( (letter = getc(fp)) != EOF){    
-      //Block
-      if(letter == 'B') board[i][j] = 'B';
-      //New Column
-      j++;
-      //New Line
-      if (letter == '\n'){
-         i++;
-         j = 0;
-      } 
-   }
-   game_board.board = board;
+    while( (letter = getc(fp)) != EOF){    
+		//Block
+		if(letter == 'B') {
+			board[i][j] = 'B';
+		}
+		//New Column
+		j++;
+		//New Line
+		if (letter == '\n'){
+			i++;
+			j = 0;
+      	} 
+    }
+    game_board.board = board;
+
+   	int v = 2;
+
+	game_board.dim[0] = line;
+	game_board.dim[1] = col;
+
+	for (int i = 0; i < game_board.lines; ++i)
+	{
+		for (int j = 0; j < game_board.cols; ++j)
+		{			
+			if(game_board.board[i][j] == 'B') game_board.dim[v] = 1;
+			else game_board.dim[v] = 0;
+
+			v++;
+		}		
+	}
 
    fclose(fp);
 
@@ -209,31 +227,47 @@ player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player
 
 }
 
-void serialize(board_info new_board){
+/*
+board_info serialize(board_info new_board){
 
 	int size = 2 + new_board.cols*new_board.lines;
 	int dim[size];
 	int v = 2;
 
-	dim[0] = new_board.lines;
-	dim[1] = new_board.cols;
+	//printf("\n\nColunas: %d, Linhas: %d, Size: %d\n", new_board.cols,new_board.lines,size );
+	
+	new_board.dim[0] = new_board.lines;
+	new_board.dim[1] = new_board.cols;
 
 	for (int i = 0; i < new_board.lines; ++i)
 	{
 		for (int j = 0; j < new_board.cols; ++j)
 		{			
-			if(new_board.board[i][j] == 'B') dim[v] = 1;
-			else dim[v] = 0;
+			if(new_board.board[i][j] == 'B') new_board.dim[v] = 1;
+			else new_board.dim[v] = 0;
 
 			v++;
 		}		
 	}
 
-	memcpy(new_board.dim, dim, size);
-}
-	
-		
+	return new_board;
+}*/
 
+void display_(board_info new_board){
+	
+	printf("\n");
+
+	for( int a = 2; a < 2+new_board.cols*new_board.lines; a++){
+		
+		if(a-2 == 10 || a-2 == 20 || a-2 == 30 || a-2 == 40 || a-2 == 50
+			|| a-2 == 60 || a-2 == 70 || a-2 == 80 || a-2 == 90) 
+			printf("\n");
+
+		printf("%d ", new_board.dim[a] );
+	}
+
+	printf("\n");
+}
 	
 /*
 
@@ -316,7 +350,29 @@ void serialize(board_info new_board){
 }
 */
 
+void send_board(int client_sock, board_info new_board){
+	//dim 0 -> line, dim 1 -> col
+	int dim[2];
+	
+	dim[1] = new_board.lines;
+	dim[0] = new_board.cols;
+	//Envia Lines and cols 
+	send(client_sock, &dim, sizeof(dim), 0);
 
+	//Envia as coordenadas do Brick
+	for (int i = 0; i < new_board.lines; ++i)
+	{
+		for (int j = 0; j < new_board.cols; ++j)
+		{			
+			if(new_board.board[i][j] == 'B'){
+				dim[0] = j; //Colunas
+				dim[1] = i; //Linhas
+				send(client_sock, &dim, sizeof(dim), 0);
+			}		
+		}		
+	}
+
+}
 
 
 int main(int argc, char* argv[]){
@@ -357,7 +413,7 @@ int main(int argc, char* argv[]){
 
 	//pthread_t thread_id;
 	int err_rcv;
-	int messg[MAX_SIZE];
+
 
 	while(1){ 
 
@@ -371,16 +427,13 @@ int main(int argc, char* argv[]){
 		printf("\nTEMOS %d CRL\n", n_player);
 
 		/*SERIALIZE STRUCTURE*/
-		serialize(new_board);
-		
-		/*ERRO - nao da para enviar na funcao SEND() um array de inteiros (numa estrutura)!!
-		Temos de alterar o dim, visto que no send(__, XXXX, sizeof(XXXX), 0) o XXXX tem de 
-		que ser uma estrutura de inteiros sem ser arrays*/
 
-		memcpy(messg,new_board.dim, 2 + new_board.cols*new_board.lines);
+		display_(new_board);
 		
-		send(client_sock, &messg, sizeof(messg), 0);
+	
+		//send(client_sock, &new_board.dim, sizeof(new_board.dim), 0);
 
+		send_board(client_sock, new_board);
 		
 
 		if ( (err_rcv = recv(client_sock, &npid, sizeof(npid), 0)) > 0 ){
