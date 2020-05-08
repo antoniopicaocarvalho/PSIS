@@ -53,3 +53,8 @@ board_info board_read();
 board_info board_update (char item, board_info board, int pos[2]);
 
 player_id* find_player (player_id* head, pid_t npid);
+
+
+player_id * list_player(player_id * new_player, player_id* head);
+
+player_id * init_player (player_id * new_player, board_info new_board, pid_t npid, int n_player, int client_sock);

@@ -65,6 +65,7 @@ int server_socket;
 	return(NULL);
 }*/
 
+
 board_info board_read() {
 
 	int col;
@@ -96,7 +97,7 @@ board_info board_read() {
 
    	char ** board;
 	int i, j;
-	board = malloc(sizeof(char *) * line);
+	board = malloc(sizeof(char *) * (line+1));           /*MUDEI PARA line+1*/
 	for ( i = 0 ; i < line; i++){
 		board[i] = malloc (sizeof(char) * (col+1));
 		for (j = 0; j < col; j++){
@@ -146,6 +147,7 @@ board_info board_read() {
 
 
 /*adiciona novo jogador ao fim da lista e preenche-o*/
+/*
 player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player, int dim[], board_info new_board){
 
 	int aux_monster[2];
@@ -166,7 +168,7 @@ player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player
 		head -> player_n = n_player;	
 
 
-		/*	DEFINIR PRIMEIRA POSICAO DO PACMAN*/
+		//	DEFINIR PRIMEIRA POSICAO DO PACMAN
 
 		aux_pacman[0] = rand()%(dim[0]-1);
 		aux_pacman[1] = rand()%(dim[1]-1);
@@ -178,7 +180,7 @@ player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player
 		head -> pos_pacman[1]=aux_pacman[1];
 
 
-		/*DEFINIR PRIMEIRA POSICAO DO MONSTER*/
+		//DEFINIR PRIMEIRA POSICAO DO MONSTER
 
 		aux_monster[0] = rand()%(dim[0]-1);
 		aux_monster[1] = rand()%(dim[1]-1);
@@ -214,7 +216,8 @@ player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player
 	run -> next -> player_n = n_player;
 
 	
-	/*	DEFINIR PRIMEIRA POSICAO DO PACMAN*/printf("antes primeiro while\n");
+	//	DEFINIR PRIMEIRA POSICAO DO PACMAN
+	printf("antes primeiro while\n");
 
 	aux_pacman[0] = rand()%(dim[0]-1);
 	aux_pacman[1] = rand()%(dim[1]-1);
@@ -227,7 +230,8 @@ player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player
 	run -> next -> pos_pacman[1]=aux_pacman[1];
 
 
-	/*DEFINIR PRIMEIRA POSICAO DO MONSTER*/printf("antes segundo while\n");
+	//DEFINIR PRIMEIRA POSICAO DO MONSTER
+	printf("antes segundo while\n");
 
 	aux_monster[0] = rand()%(dim[0]-1);
 	aux_monster[1] = rand()%(dim[1]-1);
@@ -252,7 +256,7 @@ player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player
 
 	return (head);
 }	
-
+*/
 
 
 void send_board(int client_sock, board_info new_board){
@@ -324,6 +328,11 @@ int main(int argc, char* argv[]){
 	//pthread_t thread_id;
 	int err_rcv;
 
+	int first_pos[2];
+
+	int pos[2];
+	int rgb[3];
+
 
 
 	while(1){ 
@@ -337,30 +346,39 @@ int main(int argc, char* argv[]){
 		n_player++;
 		printf("\nTEMOS %d CRL\n", n_player);
 
-		/*SERIALIZE STRUCTURE*/
-
-		//display_(new_board);
-	
-		//send(client_sock, &new_board.dim, sizeof(new_board.dim), 0);
-
+		/*ENVIAR A BOARD INICIAL lida do ficheiro*/
 		send_board(client_sock, new_board);
 
 
 		if ( (err_rcv = recv(client_sock, &npid, sizeof(npid), 0)) > 0 ){
-			printf("recebeu o pid -  %d \n", npid);
+			printf("recebeu o pid -  %d do jogador %d \n", npid, n_player);
+
 
 			/*VERIFICAR SE HA ESPACO PARA MAIS 1 PLAYER*/
 			if (new_board.cols*new_board.lines - new_board.bricks < n_player*2){
 				printf("CAN'T FIT ANOTHER ONE -- DJ KHALED  \n");
 			}
 
+
 			else{ 
 
-				head = new_player(npid, client_sock, head, n_player, dim, new_board);   //ADD PLAYER TO LIST OF player_id
+				player_id  * new_player;//------------------------------------------------------------------------->criar estrutura do novo jogador
+				new_player = init_player(new_player, new_board, npid, n_player, client_sock); //---------------->preencher a estrutura
+				first_pos[0] = new_player->pos_pacman[0];
+				first_pos[1] = new_player->pos_pacman[1];
+				board_update ('P', new_board, first_pos);//----------------------------------------------------->atualizar a board com o spawn do pacman
+
+				first_pos[0] = new_player->pos_monster[0];
+				first_pos[1] = new_player->pos_monster[1];
+				board_update ('M', new_board, first_pos);//----------------------------------------------------->atualizar a board com o spawn do monstro
+
+				head = list_player(new_player, head);
 
 
-				int pos[2];
-				int rgb[3];
+				//head = new_player(npid, client_sock, head, n_player, dim, new_board);   
+
+
+				
 
 
 				/*retorna ponteiro para a estrutura do player que queremos*/
@@ -427,4 +445,74 @@ player_id* find_player (player_id* head, pid_t npid){
 
 }
 
+
+player_id * init_player (player_id * new_player, board_info new_board, pid_t npid, int n_player, int client_sock){
+
+		
+		new_player = malloc(sizeof(player_id));  
+
+		new_player->player_pid = npid; 
+		new_player->player_n = n_player;	
+
+		int c = new_board.cols; 
+		int l = new_board.lines;
+
+		int aux_monster[2];
+		int aux_pacman[2];
+
+
+
+		/*	DEFINIR PRIMEIRA POSICAO DO PACMAN*/
+
+		aux_pacman[0] = rand()%(c-1);
+		aux_pacman[1] = rand()%(l-1);
+		while (new_board.board[aux_pacman[0]][aux_pacman[1]] != ' '){ 
+			aux_pacman[0]=rand()%(c-1);
+			aux_pacman[1]=rand()%(l-1);
+		}
+		new_player->pos_pacman[0]=aux_pacman[0] ;
+		new_player->pos_pacman[1]=aux_pacman[1];
+
+
+		/*DEFINIR PRIMEIRA POSICAO DO MONSTER*/
+
+		aux_monster[0] = rand()%(c-1);
+		aux_monster[1] = rand()%(l-1);
+		while (new_board.board[aux_monster[0]][aux_monster[1]] != ' ' && ((aux_pacman[0]==aux_monster[0]) && (aux_pacman[1]==aux_monster[1]))){ 
+			aux_monster[0]=rand()%(c-1);
+			aux_monster[1]=rand()%(l-1);
+		}
+		new_player->pos_monster[0]=aux_monster[0];
+		new_player->pos_monster[1]=aux_monster[1];
+
+
+		new_player->rgb[0] = rand()%255;
+		new_player->rgb[1] = rand()%255;
+		new_player->rgb[2] = rand()%255;
+		
+		new_player->sock_id = client_sock;
+		new_player->next = NULL;
+
+
+}
+
+
+player_id * list_player(player_id * new_player, player_id* head){   
+
+
+	if (head == NULL) {	  						
+			head = new_player;
+			return(head);
+		}
+
+
+	player_id* run = head;
+
+	while (run -> next != NULL)
+		run = run->next;
+			
+	run -> next = malloc(sizeof(player_id));	/*fazer malloc no init_player???*/
+	run -> next = new_player;
+	return (head);
+}	
 
