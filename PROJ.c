@@ -97,7 +97,7 @@ board_info board_read() {
 
    	char ** board;
 	int i, j;
-	board = malloc(sizeof(char *) * line);           /*MUDEI PARA line+1*/
+	board = malloc(sizeof(char *) * (line+1));           /*MUDEI PARA line+1*/
 	for ( i = 0 ; i < line; i++){
 		board[i] = malloc (sizeof(char) * (col+1));
 		for (j = 0; j < col; j++){
