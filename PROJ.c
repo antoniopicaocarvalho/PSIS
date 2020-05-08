@@ -25,7 +25,7 @@ int sock_fd;
 
 
 int server_socket;
-
+ 
 /*void * serverThread(void* argc){
 
 	ex4_message msg;
