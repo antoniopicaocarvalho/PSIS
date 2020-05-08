@@ -81,18 +81,16 @@ board_info board_read() {
            }
 
     //Reads first line of 'fp' file
-   fscanf(fp, "%d %d", &col, &line);
+	fscanf(fp, "%d %d", &col, &line);
 
-   printf("Cols: %d\n", col);
-   printf("Lines: %d\n", line);
+    printf("Cols: %d\n", col);
+   	printf("Lines: %d\n", line);
 
-   game_board.cols = col;
-   game_board.lines = line;
-   game_board.bricks = 0;
-   /*int board[line][col];
-   memset( board, 0 ,line*col*sizeof(int));*/
+	game_board.cols = col;
+    game_board.lines = line;
+    game_board.bricks = 0;
 
-   char letter;
+   	char letter;
 
    	char ** board;
 	int i, j;
@@ -125,12 +123,10 @@ board_info board_read() {
     }
     game_board.board = board;
 
-   	int v = 2;
-
    fclose(fp);
 
-   // Teste
-  /* int row, columns;
+ /*   // Teste
+  int row, columns;
    for (row=0; row<line; row++)
    {
        for(columns=0; columns<col; columns++)
@@ -138,8 +134,8 @@ board_info board_read() {
             printf("%d ", game_board.board[row][columns]);
        }
        printf("\n");
-   } */
-
+   } 
+*/
    return game_board;
 }
 
@@ -148,7 +144,13 @@ board_info board_read() {
 
 player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player, int dim[], board_info new_board){
 
+	printf("Vamu Qi Vamu\n");
+	
+
 	if (head == NULL) {	  			//lista vazia - primeiro jogador
+		
+		printf("Vamu Qi Vamu\n");
+
 		head = malloc(sizeof(player_id));
 
 		if (head == NULL){
@@ -156,22 +158,24 @@ player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player
 			exit(-1);
 		}
 
+
+
 		head -> player_pid = npid; 
 		head -> player_n = n_player;				//arranjar uma funcao que receba o nº do jogador e retorne um rgb[3] decente
 		
 		head -> pos_pacman[0]=rand()%dim[0];
 		head -> pos_pacman[1]=rand()%dim[1];
-		while (new_board.board[head->pos_pacman[0]][head->pos_pacman[1]] != ' '){ 
+		/*while (new_board.board[head->pos_pacman[0]][head->pos_pacman[1]] != ' '){ 
 			head -> pos_pacman[0]=rand()%dim[0];
 			head -> pos_pacman[1]=rand()%dim[1];
-		}
+		}*/
 
 		head -> pos_monster[0]=rand()%dim[0];
 		head -> pos_monster[1]=rand()%dim[1];
-		while (new_board.board[head->pos_monster[0]][head->pos_monster[1]] != ' '){ 
+		/*while (new_board.board[head->pos_monster[0]][head->pos_monster[1]] != ' '){ 
 			head -> pos_monster[0]=rand()%dim[0];
 			head -> pos_monster[1]=rand()%dim[1];
-		}
+		}*/
 
 		head -> rgb[0] = rand()%255;
 		head -> rgb[1] = rand()%255;
@@ -181,49 +185,56 @@ player_id* new_player(pid_t npid, int client_sock, player_id* head, int n_player
 		head -> next = NULL;
 
 		return(head);
-		}
+	}
 
-		//verificar que e um novo jogador
-		player_id* run = head;
+	//verificar que e um novo jogador
+	player_id* run = head;
 
-		while (run -> player_pid != npid){		//TALVEZ TENHA DE TROCAR PARA =! NULL
+	printf("Cabufa\n");
 
-			if(run -> next == NULL){
-														//se sim adicionalo a lista, preenche-lo e retornalo
-				//n_player_aux++;
-				run -> next = malloc(sizeof(player_id));
-				
-				run -> next -> player_pid = npid;
-				run -> next -> player_n = n_player;
+	while (run -> player_pid != npid){		//TALVEZ TENHA DE TROCAR PARA =! NULL
+
+		printf("Quaresma \n");
+
+		if(run -> next == NULL){
+									//se sim adicionalo a lista, preenche-lo e retornalo
+			//n_player_aux++;
+			run -> next = malloc(sizeof(player_id));
+			
+			run -> next -> player_pid = npid;
+			run -> next -> player_n = n_player;
 
 			run -> next -> pos_pacman[0]=rand()%dim[0];
 			run -> next -> pos_pacman[1]=rand()%dim[1];
-			while (new_board.board[head->pos_pacman[0]][head->pos_pacman[1]] != ' '){ 
+			/*while (new_board.board[head->pos_pacman[0]][head->pos_pacman[1]] != ' '){ 
 				run -> next -> pos_pacman[0]=rand()%dim[0];
 				run -> next -> pos_pacman[1]=rand()%dim[1];
-			}
+			}*/
 
 			run -> next -> pos_monster[0]=rand()%dim[0];
 			run -> next -> pos_monster[1]=rand()%dim[1];
-			while (new_board.board[head->pos_monster[0]][head->pos_monster[1]] != ' '){ 
+			/*while (new_board.board[head->pos_monster[0]][head->pos_monster[1]] != ' '){ 
 				run -> next -> pos_monster[0]=rand()%dim[0];
 				run -> next -> pos_monster[1]=rand()%dim[1];
-			}
+			}*/
 
-				run -> next -> rgb[0] = rand()%255;
-				run -> next -> rgb[1] = rand()%255;
-				run -> next -> rgb[2] = rand()%255;
+			run -> next -> rgb[0] = rand()%255;
+			run -> next -> rgb[1] = rand()%255;
+			run -> next -> rgb[2] = rand()%255;
 
-				run -> next -> sock_id = client_sock;			
-				run -> next -> next = NULL;
+			run -> next -> sock_id = client_sock;			
+			run -> next -> next = NULL;
 
-				return (head);
-			}	
-			run = run->next;	
-
-						
+			return (head);
 		}
-		return(head);		//retorna a estrutura correspondente ao npid se este ja existir na lista
+
+		run = run->next;	
+
+					
+	}
+
+	printf("Badjoras \n");
+	return head;		//retorna a estrutura correspondente ao npid se este ja existir na lista
 
 }
 
@@ -419,11 +430,6 @@ int main(int argc, char* argv[]){
 	//pthread_t thread_id;
 	int err_rcv;
 
-
-
-
-
-
 	while(1){ 
 
     	client_sock = accept(sock_fd, (struct sockaddr*)&client, &size);
@@ -435,11 +441,6 @@ int main(int argc, char* argv[]){
 		n_player++;
 		printf("\nTEMOS %d CRL\n", n_player);
 
-		/*SERIALIZE STRUCTURE*/
-
-		//display_(new_board);
-	
-		//send(client_sock, &new_board.dim, sizeof(new_board.dim), 0);
 
 		send_board(client_sock, new_board);
 		
@@ -452,11 +453,13 @@ int main(int argc, char* argv[]){
 				printf("CAN'T FIT ANOTHER ONE -- DJ KHALED  \n");
 			}
 			else{ 
+				printf("Entrou!\n");
 
-				head = new_player(npid, client_sock, head, n_player, dim, new_board);   //ADD PLAYER TO LIST OF player_id
-				
+				head = new_player( npid, client_sock, head, n_player, dim, new_board);
+
 				int pos[2];
 				int rgb[3];
+				/*
 				pos[0] = head -> pos_pacman[0];
 				pos[1] = head -> pos_pacman[1];
 				rgb[0] = head -> rgb[0];
@@ -471,10 +474,10 @@ int main(int argc, char* argv[]){
 				pos[0] = head -> pos_monster[0];
 				pos[1] = head -> pos_monster[1];
 				new_board = board_update ('M', new_board, pos);
-				send(client_sock, &pos, sizeof(pos), 0);
+				send(client_sock, &pos, sizeof(pos), 0);*/
 
 
-
+				//printf("Cores: %d %d %d\n", rgb[0], rgb[1], rgb[2] );
 
 				//Verificar se a lista esta a ficar feita
 				/*player_id * aux = head;
