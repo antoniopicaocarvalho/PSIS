@@ -51,3 +51,5 @@ void send_board(int client_sock, board_info new_board);
 board_info board_read();
 
 board_info board_update (char item, board_info board, int pos[2]);
+
+player_id* find_player (player_id* head, pid_t npid);
