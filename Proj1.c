@@ -61,7 +61,10 @@ int main(int argc, char* argv[]){
 
 	int err_rcv;
 	int first_pos[2];
-	int pos[2];
+
+	int pos1[2];
+	int pos2[2];
+
 	int rgb[3];
 
 	while(1){ 
@@ -111,37 +114,32 @@ int main(int argc, char* argv[]){
 				/*retorna ponteiro para a estrutura do player que queremos*/
 				player_id * player = find_player(head, npid);
 
-				printf("found it\n");
-
-				pos[0] = player -> pos_pacman[0];
-				pos[1] = player -> pos_pacman[1];
-				printf("pos - %d %d \n", pos[0], pos[1]);
-
-
 				rgb[0] = player -> rgb[0];
 				rgb[1] = player -> rgb[1];
 				rgb[2] = player -> rgb[2];
 				printf("rgb - %d %d %d \n", rgb[0], rgb[1], rgb[2]);
+				send(client_sock, &rgb, sizeof(rgb), 0);
 
-				//send(client_sock, &rgb, sizeof(rgb), 0);
-
-				/*new_board = board_update ('P', new_board, pos);
-				send(client_sock, &pos, sizeof(pos), 0);
+				pos1[0] = player -> pos_pacman[0];
+				pos1[1] = player -> pos_pacman[1];
+				send(client_sock, &pos1, sizeof(pos1), 0);
 			
-				pos[0] = head -> pos_monster[0];
-				pos[1] = head -> pos_monster[1];
-				new_board = board_update ('M', new_board, pos);
-				send(client_sock, &pos, sizeof(pos), 0);
+				pos2[0] = player -> pos_monster[0];
+				pos2[1] = player -> pos_monster[1];
+				send(client_sock, &pos2, sizeof(pos2), 0);
 
-				*/
+
+				send_spawn(pos1, pos2, rgb, head, npid);
+
+				
 
 
 				//Verificar se a lista esta a ficar feita
-				player_id * aux = head;
+				/*player_id * aux = head;
 				while(aux){
 					printf("O jogador %d esta na lista\n", aux->player_n);
 					aux = aux -> next;
-				}
+				}*/
 			}
 		}
  	}
@@ -309,7 +307,7 @@ player_id * list_player(player_id * new_player, player_id* head){
 	return (head);
 }	
 
-player_id* find_player (player_id * head, pid_t npid){
+player_id * find_player (player_id * head, pid_t npid){
 
 	player_id * aux = head;
 	while(aux){
@@ -320,4 +318,19 @@ player_id* find_player (player_id * head, pid_t npid){
 
 	printf("NAO ENCONTROU NA LISTA TA FDD\n");
 	exit(-1);
+}
+
+
+void send_spawn(int pac[2], int mon[2], int rgb[3], player_id * head, pid_t npid){
+
+	player_id * aux = head;
+	while(aux){
+		if (aux -> player_pid != npid){ 
+			send(aux -> sock_id, &rgb, sizeof(rgb), 0);
+			send(aux -> sock_id, &pac, sizeof(pac), 0);
+			send(aux -> sock_id, &mon, sizeof(mon), 0);
+		}
+	aux = aux->next;
+	}
+
 }

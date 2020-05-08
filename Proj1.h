@@ -51,3 +51,5 @@ board_info board_update (char item, board_info board, int pos[2]);
 player_id * list_player(player_id * new_player, player_id* head);
 
 player_id* find_player (player_id * head, pid_t npid);
+
+void send_spawn(int pac[2], int mon[2], int rgb[3], player_id * head, pid_t npid);
