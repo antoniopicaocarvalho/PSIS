@@ -223,35 +223,39 @@ int main(int argc, char * argv[]){
 		printf("Há %d Bricks!!!\n",msg[0]); 
 		n_bricks = msg[0];
 	}
+
+	
 	//Pinta os Bricks
 	for(int i = 0; i < n_bricks ; i++){
 		if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_brick(msg[0],msg[1]);
 	}
+
+
 
 	printf("Board Concluida\n");
 
 	send(sock_fd, &npid, sizeof(npid), 0);
 
 	//Recebe cor
-	/*if(err_rcv = recv(sock_fd, &rgb, sizeof(rgb), 0)>0){
+	if(err_rcv = recv(sock_fd, &rgb, sizeof(rgb), 0)>0){
 		printf("recebeu cor ou caraças\n");
 		
-	}*/
+	}
 
 	//Recebe pos_pacman e pinta
-	/*if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
+	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
 		paint_pacman(msg[0],msg[1], 100, 0, 47);
 		printf("recebeu cor ou caraças, \n");
 
-	}*/
+	}
 
 
 	//Recebe pos_monster e pinta
-	/*if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
+	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
 		paint_monster(msg[0],msg[1], 200, 0, 47);
 		printf("recebeu cor ou caraças, \n");
 		
-	}*/
+	}
 
 		
 
