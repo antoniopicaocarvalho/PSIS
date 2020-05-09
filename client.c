@@ -2,6 +2,7 @@
 #include "sock_init.h"
 #include <sys/types.h>
 #include <unistd.h>
+#include <pthread.h>
 #include "Proj1.h"
 
 
@@ -135,7 +136,90 @@ void * clientThread(void* argc){
 }*/
 
 
-/*---------------------------------------client.c---------------------------------------------------------*/
+int main(int argc, char * argv[]){
+
+    if (argc <2){//-----------------------------------------------------------------------falta o adress do server
+      printf("second argument should be server address\n");
+      exit(-1);}
+
+    SDL_Event event;
+
+	struct sockaddr_in server_addr = make_socket(&sock_fd);
+	inet_aton(argv[1], &server_addr.sin_addr);
+	sock_fd = connect_server (sock_fd, server_addr);
+
+	int rgb[3];
+	int msg[2];
+	int err_rcv;
+	int dim[2];
+
+	pid_t npid = getpid();
+	printf("o meu pid é %d \n", npid);
+	int n_bricks = 0;
+
+	//Recebe linhas e colunas
+	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
+		
+		dim[0] = msg[0];
+		dim[1] = msg[1];
+		create_board_window(msg[0],msg[1]);
+		printf("Board criada!!!\n"); 
+	}
+	//Recebe numero de Bricks
+	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
+		printf("Há %d Bricks!!!\n",msg[0]); 
+		n_bricks = msg[0];
+	}
+	//Pinta os Bricks
+	for(int i = 0; i < n_bricks ; i++){
+		if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_brick(msg[0],msg[1]);
+	}
+
+	printf("Board Concluida\n");
+
+	send(sock_fd, &npid, sizeof(npid), 0);
+
+	pthread_t thread_id;
+	pthread_create(&thread_id, NULL, sync_receiver, NULL);
+
+	send(sock_fd, &thread_id, sizeof(thread_id), 0);
+
+	//Recebe cor
+	if(err_rcv = recv(sock_fd, &rgb, sizeof(rgb), 0)>0) printf("recebeu cor ou caraças %d %d %d\n", rgb[1], rgb[2], rgb[0]);
+		
+	//Recebe pos_pacman e pinta
+	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_pacman(msg[0],msg[1], rgb[0], rgb[1], rgb[2]);
+
+	//Recebe pos_monster e pinta
+	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_monster(msg[0],msg[1], rgb[0], rgb[1], rgb[2]);	
+
+
+	int done = 0;
+
+	while (!done){
+		while (SDL_PollEvent(&event)) {
+			if(event.type == SDL_QUIT) 
+					done = SDL_TRUE;
+			
+		}
+
+
+
+	}
+	printf("fim\n");
+	close_board_windows();
+	exit(0);
+}
+
+	/*
+	pthread_t thread_i;
+	pthread_create (&thread_i, NULL, paint_places, &dim_board);	
+	*/
+	
+
+
+
+
 void create_board(board_info new_board) {
 
 	int cols = new_board.cols;
@@ -178,109 +262,27 @@ struct board_info un_serialize(int msg[]){
 	}
 
 	return board;
-
-	/*TRADUZIR MSG PARA ESTRUTURA BOARD_INFO*/
 }
 
 
+	
+void * sync_receiver(){
 
-
-
-int main(int argc, char * argv[]){
-
-
-
-    if (argc <2){//-----------------------------------------------------------------------falta o adress do server
-      printf("second argument should be server address\n");
-      exit(-1);}
-
-    SDL_Event event;
-
-	struct sockaddr_in server_addr = make_socket(&sock_fd);
-	inet_aton(argv[1], &server_addr.sin_addr);
-	sock_fd = connect_server (sock_fd, server_addr);
-
-	int rgb[3];
-	int msg[2];
+	player_id msg;
 	int err_rcv;
 
-	int dim[2];
-
-	pid_t npid = getpid();
-	printf("o meu pid é %d \n", npid);
-	int n_bricks = 0;
-
-	//Recebe linhas e colunas
-	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
-		
-		dim[0] = msg[0];
-		dim[1] = msg[1];
-		create_board_window(msg[0],msg[1]);
-		printf("Board criada!!!\n"); 
-	}
-	//Recebe numero de Bricks
-	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
-		printf("Há %d Bricks!!!\n",msg[0]); 
-		n_bricks = msg[0];
-	}
-	//Pinta os Bricks
-	for(int i = 0; i < n_bricks ; i++){
-		if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_brick(msg[0],msg[1]);
-	}
-
-	printf("Board Concluida\n");
-
-	send(sock_fd, &npid, sizeof(npid), 0);
-
-	//Recebe cor
-	if(err_rcv = recv(sock_fd, &rgb, sizeof(rgb), 0)>0) printf("recebeu cor ou caraças %d %d %d\n", rgb[1], rgb[2], rgb[0]);
-		
-	//Recebe pos_pacman e pinta
-	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_pacman(msg[0],msg[1], rgb[0], rgb[1], rgb[2]);
-
-	//Recebe pos_monster e pinta
-	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_monster(msg[0],msg[1], rgb[0], rgb[1], rgb[2]);		
-		
 	//Recebe cenas do gajo novo
-	if(err_rcv = recv(sock_fd, &rgb, sizeof(rgb), 0)>0) printf("recebeu cor ou caraças %d %d %d\n", rgb[1], rgb[2], rgb[0]);	
-	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_pacman(msg[0],msg[1], rgb[0], rgb[1], rgb[2]);
-	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_monster(msg[0],msg[1], rgb[0], rgb[1], rgb[2]);
-		
-		
-	
+	while(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
 
-
-	int done = 0;
-	
-	while (!done){
-		while (SDL_PollEvent(&event)) {
-			if(event.type == SDL_QUIT) 
-					done = SDL_TRUE;
-			
-		}
-
+		paint_pacman(msg.pos_pacman[0],msg.pos_pacman[1], msg.rgb[0], msg.rgb[1], msg.rgb[2]);
+		paint_monster(msg.pos_monster[0],msg.pos_monster[1], msg.rgb[0], msg.rgb[1], msg.rgb[2]);
 	}
-	printf("fim\n");
-	close_board_windows();
-	exit(0);
-}
 
 
 	/*
-	struct sockaddr_in server_addr =  make_socket (&sock_fd);//--------------------------------Socket	    
-	inet_aton(argv[1], &server_addr.sin_addr);
+	if(err_rcv = recv(sock_fd, &rgb, sizeof(rgb), 0)>0) printf("recebeu cor ou caraças %d %d %d\n", rgb[1], rgb[2], rgb[0]);	
+	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_pacman(msg[0],msg[1], rgb[0], rgb[1], rgb[2]);
+	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_monster(msg[0],msg[1], rgb[0], rgb[1], rgb[2]);*/
 
-	sock_fd = connect_server (sock_fd, server_addr);
-
-	int dim_board;
-	int done=0;
-	read(sock_fd, &dim_board, sizeof(int));
-	pthread_t thread_i;
-	pthread_create (&thread_i, NULL, paint_places, &dim_board);	
-
-
-
-
-*/
 	
-	
+}

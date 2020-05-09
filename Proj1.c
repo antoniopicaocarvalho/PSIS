@@ -67,6 +67,10 @@ int main(int argc, char* argv[]){
 
 	int rgb[3];
 
+	pthread_t player_thread;
+
+
+
 	while(1){ 
 
     	client_sock = accept(sock_fd, (struct sockaddr*)&client, &size);
@@ -81,9 +85,13 @@ int main(int argc, char* argv[]){
 		/*ENVIAR A BOARD INICIAL lida do ficheiro*/
 		send_board(client_sock, new_board);
 
+		//RECEBE O PID
+		if ( (err_rcv = recv(client_sock, &npid, sizeof(npid), 0)) > 0 )
+			printf("recebeu o pid:  %d , do jogador %d \n", npid, n_player);
 
-		if ( (err_rcv = recv(client_sock, &npid, sizeof(npid), 0)) > 0 ){
-			printf("- recebeu o pid:  %d , do jogador %d \n", npid, n_player);
+		//RECEBE O THREAD_ID
+		if ( (err_rcv = recv(client_sock, &player_thread, sizeof(player_thread), 0)) > 0 ){
+			printf("recebeu o thread_id\n");
 
 			/*VERIFICAR SE HA ESPACO PARA MAIS 1 PLAYER*/
 			if (new_board.cols*new_board.lines - new_board.bricks < n_player*2){
@@ -92,7 +100,7 @@ int main(int argc, char* argv[]){
 			else{ 
 				/*Novo jogador*/
 				player_id  * new_player = NULL;
-				new_player = init_player(new_player, new_board, npid, n_player, client_sock); 
+				new_player = init_player(new_player, new_board, npid, n_player, client_sock, player_thread); 
 				
 				//Posicao do Pacman
 				first_pos[0] = new_player->pos_pacman[0];
@@ -114,6 +122,7 @@ int main(int argc, char* argv[]){
 				/*retorna ponteiro para a estrutura do player que queremos*/
 				player_id * player = find_player(head, npid);
 
+				/*mandar informacoes para o novo jogador*/
 				rgb[0] = player -> rgb[0];
 				rgb[1] = player -> rgb[1];
 				rgb[2] = player -> rgb[2];
@@ -128,8 +137,8 @@ int main(int argc, char* argv[]){
 				pos2[1] = player -> pos_monster[1];
 				send(client_sock, &pos2, sizeof(pos2), 0);
 
-
-				send_spawn(pos1, pos2, rgb, head, npid);
+				/*mandar para os que ja la estavam*/
+				send_spawn(player, head);
 
 				
 
@@ -237,19 +246,20 @@ void send_board(int client_sock, board_info new_board){
 }
 
 
-player_id * init_player (player_id * new_player, board_info new_board, pid_t npid, int n_player, int client_sock){
+player_id * init_player (player_id * new_player, board_info new_board, pid_t npid, int n_player, int client_sock, pthread_t player_thread){
 
 		new_player = malloc(sizeof(player_id));  
 
 		new_player->player_pid = npid; 
-		new_player->player_n = n_player;	
+		new_player->player_n = n_player;
+		new_player->thread_id = player_thread;	
 
 		int c = new_board.cols; 
 		int l = new_board.lines;
 		int aux_monster[2];
 		int aux_pacman[2];
 
-		printf("1\n");
+
 		/*	DEFINIR PRIMEIRA POSICAO DO PACMAN*/
 		while (1){ 
 			aux_pacman[0]=rand()%(l-1);
@@ -260,7 +270,6 @@ player_id * init_player (player_id * new_player, board_info new_board, pid_t npi
 		new_player->pos_pacman[0]=aux_pacman[0] ;
 		new_player->pos_pacman[1]=aux_pacman[1];
 
-		printf("2\n");
 		/*DEFINIR PRIMEIRA POSICAO DO MONSTER*/
 		while(1){
 			aux_monster[0]=rand()%(l-1);
@@ -321,16 +330,29 @@ player_id * find_player (player_id * head, pid_t npid){
 }
 
 
-void send_spawn(int pac[2], int mon[2], int rgb[3], player_id * head, pid_t npid){
+void send_spawn(player_id * player, player_id * head){
 
 	player_id * aux = head;
+	player_id msg;
+
+	int sock;
+	pid_t npid = player -> player_pid;
+
+	msg.rgb[0] = player -> rgb[0];
+	msg.rgb[1] = player -> rgb[1];
+	msg.rgb[2] = player -> rgb[2];
+
+	msg.pos_pacman[0] = player -> pos_pacman[0];
+	msg.pos_pacman[1] = player -> pos_pacman[1];
+
+	msg.pos_monster[0] = player -> pos_monster[0];
+	msg.pos_monster[1] = player -> pos_monster[1];
+
 	while(aux){
 		if (aux -> player_pid != npid){ 
-			send(aux -> sock_id, &rgb, sizeof(rgb), 0);
-			send(aux -> sock_id, &pac, sizeof(pac), 0);
-			send(aux -> sock_id, &mon, sizeof(mon), 0);
+			sock = aux -> sock_id;
+			send(sock, &msg, sizeof(msg), 0);			
 		}
 	aux = aux->next;
 	}
-
 }

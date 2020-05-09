@@ -19,6 +19,7 @@ typedef struct player_id{
 	int pos_monster[2];
 	int rgb[3];
 	int sock_id;
+	pthread_t thread_id;
 	struct player_id * next;
 } player_id;
 
@@ -39,12 +40,13 @@ typedef struct sock_adds{
 }sock_adds;
 
 
-//FUNCOES
+/*----------------------------SERVIDOR----------------------------*/
+
 board_info board_read();
 
 void send_board(int client_sock, board_info new_board);
 
-player_id * init_player (player_id * new_player, board_info new_board, pid_t npid, int n_player, int client_sock);
+player_id * init_player (player_id * new_player, board_info new_board, pid_t npid, int n_player, int client_sock, pthread_t player_thread);
 
 board_info board_update (char item, board_info board, int pos[2]);
 
@@ -52,4 +54,13 @@ player_id * list_player(player_id * new_player, player_id* head);
 
 player_id* find_player (player_id * head, pid_t npid);
 
-void send_spawn(int pac[2], int mon[2], int rgb[3], player_id * head, pid_t npid);
+void send_spawn(player_id * player, player_id * head);
+
+
+/*-----------------------------CLIENT-----------------------------*/
+
+void create_board(board_info new_board);
+
+struct board_info un_serialize(int msg[]);
+
+void * sync_receiver();
