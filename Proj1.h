@@ -1,16 +1,15 @@
 #include <sys/types.h>
 #include <unistd.h>
-
-#define MAX_SIZE 100000
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 
 //ESTRUTURAS
-typedef struct ex4_message{
-	int character;
+typedef struct play{
 	int x;
 	int y;
-} ex4_message;
-
+	char character;
+}play;
 
 typedef struct player_id{
 	int player_pid;
@@ -23,21 +22,20 @@ typedef struct player_id{
 	struct player_id * next;
 } player_id;
 
-
 typedef struct board_info{
 	int cols;
 	int lines;
 	char ** board;
 	int bricks;
-
 } board_info;
-
 
 typedef struct sock_adds{ 
 	int player_sock;
 	int dim_board[2];
-
 }sock_adds;
+
+
+
 
 
 /*----------------------------SERVIDOR----------------------------*/

@@ -5,6 +5,7 @@
 #include <pthread.h>
 #include "Proj1.h"
 
+Uint32 Event_ShowCharacter;
 
 /*void* paint_places (void *arg){
 
@@ -179,29 +180,92 @@ int main(int argc, char * argv[]){
 
 	send(sock_fd, &npid, sizeof(npid), 0);
 
-	pthread_t thread_id;
-	pthread_create(&thread_id, NULL, sync_receiver, NULL);
-
-	send(sock_fd, &thread_id, sizeof(thread_id), 0);
+	//pthread_t thread_id;
+	//pthread_create(&thread_id, NULL, sync_receiver, NULL);
+	//send(sock_fd, &thread_id, sizeof(thread_id), 0);
 
 	//Recebe cor
 	if(err_rcv = recv(sock_fd, &rgb, sizeof(rgb), 0)>0) printf("recebeu cor ou caraças %d %d %d\n", rgb[1], rgb[2], rgb[0]);
-		
+	
 	//Recebe pos_pacman e pinta
 	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_pacman(msg[0],msg[1], rgb[0], rgb[1], rgb[2]);
+
+	int x_other = msg[0];
+	int y_other = msg[1];
 
 	//Recebe pos_monster e pinta
 	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_monster(msg[0],msg[1], rgb[0], rgb[1], rgb[2]);	
 
 
-	int done = 0;
 
+	/*PREPARAR PARA JOGAR*/
+	int x = 0;
+	int y = 0;
+	play jogada;
+	play *event_data;
+	SDL_Event new_event;
+	
+	event_data = malloc(sizeof(play));
+	*event_data = jogada;
+
+	SDL_zero(new_event);
+	new_event.type = Event_ShowCharacter;
+	new_event.user.data1 = event_data;
+
+	SDL_PushEvent(&new_event);
+
+
+	int done = 0;
 	while (!done){
 		while (SDL_PollEvent(&event)) {
 			if(event.type == SDL_QUIT) 
-					done = SDL_TRUE;
+				done = SDL_TRUE;
+			
+			if(event.type == Event_ShowCharacter) {
+
+				play * data_ptr;
+				data_ptr = event.user.data1;
+
+				clear_place(x_other,y_other);
+
+				x_other = data_ptr->x;
+				y_other = data_ptr->y;
+
+				paint_pacman(x_other, y_other, rgb[0], rgb[1], rgb[2]);
+				printf("new event received\n");
+			}
+
+			//when the mouse mooves the pacman also moves
+			if(event.type == SDL_MOUSEMOTION){
+				int x_new, y_new;
+
+				//this function return the place where the mouse cursor is
+				get_board_place(event.motion .x, event.motion .y,
+												&x_new, &y_new);
+				//if the mouse moved to another place
+				if((x_new != x) || (y_new != y)){
+					//the old place is cleared
+					clear_place(x, y);
+					x = x_new;
+					y=y_new;
+					//decide what color to paint the monster
+					//and paint it
+					play jogada;
+					
+					paint_pacman(x, y, rgb[0], rgb[1], rgb[2]);
+					
+					printf("move x-%d y-%d\n", x,y);
+					jogada.x=x;
+					jogada.y=y;
+					//send(sock_fd, &msg, sizeof(msg), 0);
+				}
+			}
+
+		
+
 			
 		}
+
 
 
 

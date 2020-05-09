@@ -16,10 +16,7 @@
 
 
 
-#define MaxPlayers 500
 
-
-Uint32 Event_ShowCharacter;
 int sock_fd;
 
 
@@ -27,7 +24,6 @@ int server_socket;
 
 int main(int argc, char* argv[]){
 
-	Event_ShowCharacter = SDL_RegisterEvents(1);
 	
 	//Leitura do ficheiro BOARD.TXT
 	board_info new_board;
@@ -90,70 +86,72 @@ int main(int argc, char* argv[]){
 			printf("recebeu o pid:  %d , do jogador %d \n", npid, n_player);
 
 		//RECEBE O THREAD_ID
-		if ( (err_rcv = recv(client_sock, &player_thread, sizeof(player_thread), 0)) > 0 ){
-			printf("recebeu o thread_id\n");
+		//if ( (err_rcv = recv(client_sock, &player_thread, sizeof(player_thread), 0)) > 0 ){
+		//printf("recebeu o thread_id\n");
 
-			/*VERIFICAR SE HA ESPACO PARA MAIS 1 PLAYER*/
-			if (new_board.cols*new_board.lines - new_board.bricks < n_player*2){
-				printf("CAN'T FIT ANOTHER ONE -- DJ KHALED  \n");
+		/*VERIFICAR SE HA ESPACO PARA MAIS 1 PLAYER*/
+		if (new_board.cols*new_board.lines - new_board.bricks < n_player*2){
+			printf("CAN'T FIT ANOTHER ONE -- DJ KHALED  \n");
 			}
-			else{ 
-				/*Novo jogador*/
-				player_id  * new_player = NULL;
-				new_player = init_player(new_player, new_board, npid, n_player, client_sock, player_thread); 
-				
-				//Posicao do Pacman
-				first_pos[0] = new_player->pos_pacman[0];
-				first_pos[1] = new_player->pos_pacman[1];
 
-				board_update ('P', new_board, first_pos);
-				
-				//Posicao do Monster
-				first_pos[0] = new_player->pos_monster[0];
-				first_pos[1] = new_player->pos_monster[1];
-
-				board_update ('M', new_board, first_pos);
-
-				
-				/*Ligar jogar a lista de Jogadores*/
-				head = list_player(new_player, head);
-				//head = new_player(npid, client_sock, head, n_player, dim, new_board);   
-
-				/*retorna ponteiro para a estrutura do player que queremos*/
-				player_id * player = find_player(head, npid);
-
-				/*mandar informacoes para o novo jogador*/
-				rgb[0] = player -> rgb[0];
-				rgb[1] = player -> rgb[1];
-				rgb[2] = player -> rgb[2];
-				printf("rgb - %d %d %d \n", rgb[0], rgb[1], rgb[2]);
-				send(client_sock, &rgb, sizeof(rgb), 0);
-
-				pos1[0] = player -> pos_pacman[0];
-				pos1[1] = player -> pos_pacman[1];
-				send(client_sock, &pos1, sizeof(pos1), 0);
+		else{ 
+			/*Novo jogador*/
+			player_id  * new_player = NULL;
+			new_player = init_player(new_player, new_board, npid, n_player, client_sock, player_thread); 
 			
-				pos2[0] = player -> pos_monster[0];
-				pos2[1] = player -> pos_monster[1];
-				send(client_sock, &pos2, sizeof(pos2), 0);
+			//Posicao do Pacman
+			first_pos[0] = new_player->pos_pacman[0];
+			first_pos[1] = new_player->pos_pacman[1];
 
-				/*mandar para os que ja la estavam*/
-				send_spawn(player, head);
+			board_update ('P', new_board, first_pos);
+			
+			//Posicao do Monster
+			first_pos[0] = new_player->pos_monster[0];
+			first_pos[1] = new_player->pos_monster[1];
 
-				
+			board_update ('M', new_board, first_pos);
+
+			
+			/*Ligar jogador a lista de Jogadores*/
+			head = list_player(new_player, head);
+			  
+
+			/*retorna ponteiro para a estrutura do player que queremos*/
+			player_id * player = find_player(head, npid);
+
+			/*mandar informacoes para o novo jogador*/
+			rgb[0] = player -> rgb[0];
+			rgb[1] = player -> rgb[1];
+			rgb[2] = player -> rgb[2];
+			printf("rgb - %d %d %d \n", rgb[0], rgb[1], rgb[2]);
+			send(client_sock, &rgb, sizeof(rgb), 0);
+
+			pos1[0] = player -> pos_pacman[0];
+			pos1[1] = player -> pos_pacman[1];
+			send(client_sock, &pos1, sizeof(pos1), 0);
+		
+			pos2[0] = player -> pos_monster[0];
+			pos2[1] = player -> pos_monster[1];
+			send(client_sock, &pos2, sizeof(pos2), 0);
+
+			/*mandar para os que ja la estavam*/
+			//send_spawn(player, head);
+
+			
 
 
-				//Verificar se a lista esta a ficar feita
-				/*player_id * aux = head;
-				while(aux){
-					printf("O jogador %d esta na lista\n", aux->player_n);
-					aux = aux -> next;
-				}*/
-			}
+			//Verificar se a lista esta a ficar feita
+			/*player_id * aux = head;
+			while(aux){
+				printf("O jogador %d esta na lista\n", aux->player_n);
+				aux = aux -> next;
+			}*/
 		}
- 	}
- 	return (0);	
-}
+	}
+	return (0);	
+ }
+ 	
+
 
 
 board_info board_read() {
