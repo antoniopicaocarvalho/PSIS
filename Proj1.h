@@ -54,7 +54,6 @@ player_id* find_player (player_id * head, pid_t npid);
 
 void send_spawn(player_id * player, player_id * head);
 
-play check_new_pos(int npos[4], board_info new_board);
 
 /*-----------------------------CLIENT-----------------------------*/
 
@@ -63,3 +62,5 @@ void create_board(board_info new_board);
 struct board_info un_serialize(int msg[]);
 
 void * sync_receiver();
+
+play check_new_pos(int x_next, int y_next, int x, int y,  board_info new_board);

@@ -15,10 +15,7 @@
 #include <pthread.h>
 
 
-
-
 int sock_fd;
-
 
 int server_socket;
 
@@ -138,19 +135,13 @@ int main(int argc, char* argv[]){
 			//send_spawn(player, head);
 
 
-
-
-
 			//NAO ESTA BEM --- RECEBE POSSIVEL NOVA POSICAO DO PACMAN
-			int npos[4];
+			/*int npos[4];
 			if(err_rcv = recv(sock_fd, &npos, sizeof(npos), 0)>0){
 				printf("recebeu\n");
 				play new_move = check_new_pos(npos,new_board);		
 				send(sock_fd, &new_move, sizeof(new_move), 0);		
-			}
-
-
-			
+			}*/
 
 
 			//Verificar se a lista esta a ficar feita
@@ -162,7 +153,7 @@ int main(int argc, char* argv[]){
 		}
 	}
 	return (0);	
- }
+}
  	
 
 
@@ -254,6 +245,9 @@ void send_board(int client_sock, board_info new_board){
 			}		
 		}		
 	}
+
+	//send(sock_fd, &new_board, sizeof(new_board), 0);
+	//printf("Enviou estrutura\n");
 }
 
 
@@ -366,52 +360,4 @@ void send_spawn(player_id * player, player_id * head){
 		}
 	aux = aux->next;
 	}
-}
-
-play check_new_pos(int npos[4], board_info new_board){
-
-	play next_move;
-
-	printf("AQUI 0 ");
-	//proxima posicao NAO pertence a board
-	if ( (new_board.lines < npos[2]) || (new_board.cols < npos[3]) ){
-		//e pode recuar
-		next_move.x = 2*npos[0] - npos[2];
-		next_move.y = 2*npos[1] - npos[3];
-		if (new_board.board[npos[2]][npos[3]] == '_'){
-			return(next_move);
-		}
-		//esta preso
-		else{	
-			next_move.x = npos[0];
-			next_move.y = npos[1];
-			return(next_move);
-		}
-	}
-	printf("AQUI 1");
-	//proxima posicao e um Brick
-	if (new_board.board[npos[2]][npos[3]] == 'B')
-	{
-		//e pode recuar
-		next_move.x = 2*npos[0] - npos[2];
-		next_move.y = 2*npos[1] - npos[3];
-		if (new_board.board[npos[2]][npos[3]] == '_'){
-			return(next_move);
-		}
-		//esta preso
-		else{	
-			next_move.x = npos[0];
-			next_move.y = npos[1];
-			return(next_move);
-		}
-	}
-	printf("AQUI 2");
-	//Pode avancar
-	if (new_board.board[npos[2]][npos[3]] == '_'){
-		next_move.x = npos[2];
-		next_move.y = npos[3];
-		return(next_move);
-	}
-
-	printf("AQUI");
 }
