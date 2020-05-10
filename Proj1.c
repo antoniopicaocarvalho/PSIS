@@ -19,13 +19,34 @@ int sock_fd;
 
 int server_socket;
 
-int main(int argc, char* argv[]){
+//INIT estrutura da lista de jogadores
+player_id * head = NULL;
 
+void * receive_Thread(void * argc){
+
+	player_id * player = (player_id*) argc;
+
+	play msg;
+	struct sockaddr_in client_addr;
+	int err_rcv;
+	socklen_t size_addr = sizeof(client_addr);
+
+	printf("---Ready to receive values--- \n");
+
+	while((err_rcv = recv(player->sock_id, &msg , sizeof(msg), 0)) >0 ){
+    	printf("Recebe pos do %c: %d %d\n",msg.character, msg.x, msg.y);
+	}
+
+	return (NULL);
+}
+
+
+
+int main(int argc, char* argv[]){
 	
 	//Leitura do ficheiro BOARD.TXT
 	board_info new_board;
 	new_board = board_read();
-
 
 	//Criação da Socket
 	struct sockaddr_in local_addr = make_socket(&sock_fd);
@@ -45,10 +66,6 @@ int main(int argc, char* argv[]){
 	dim[0] = new_board.cols;
 	dim[1] = new_board.lines;
 	printf("board %d * %d \n", dim[0], dim[1]);
-
-
-	//INIT estrutura da lista de jogadores
-	player_id * head = NULL;
 	
 	pid_t npid;
 
@@ -62,11 +79,10 @@ int main(int argc, char* argv[]){
 
 	pthread_t player_thread;
 
-
-
 	while(1){ 
+		
+		client_sock = accept(sock_fd, (struct sockaddr*)&client, &size);
 
-    	client_sock = accept(sock_fd, (struct sockaddr*)&client, &size);
 		if( client_sock == -1 ){
 			perror("accept");
 			exit(-1);
@@ -82,15 +98,10 @@ int main(int argc, char* argv[]){
 		if ( (err_rcv = recv(client_sock, &npid, sizeof(npid), 0)) > 0 )
 			printf("recebeu o pid:  %d , do jogador %d \n", npid, n_player);
 
-		//RECEBE O THREAD_ID
-		//if ( (err_rcv = recv(client_sock, &player_thread, sizeof(player_thread), 0)) > 0 ){
-		//printf("recebeu o thread_id\n");
 
 		/*VERIFICAR SE HA ESPACO PARA MAIS 1 PLAYER*/
-		if (new_board.cols*new_board.lines - new_board.bricks < n_player*2){
+		if (new_board.cols*new_board.lines - new_board.bricks < n_player*2) 
 			printf("CAN'T FIT ANOTHER ONE -- DJ KHALED  \n");
-			}
-
 		else{ 
 			/*Novo jogador*/
 			player_id  * new_player = NULL;
@@ -99,20 +110,16 @@ int main(int argc, char* argv[]){
 			//Posicao do Pacman
 			first_pos[0] = new_player->pos_pacman[0];
 			first_pos[1] = new_player->pos_pacman[1];
-
 			board_update ('P', new_board, first_pos);
 			
 			//Posicao do Monster
 			first_pos[0] = new_player->pos_monster[0];
 			first_pos[1] = new_player->pos_monster[1];
-
 			board_update ('M', new_board, first_pos);
-
 			
 			/*Ligar jogador a lista de Jogadores*/
 			head = list_player(new_player, head);
 			  
-
 			/*retorna ponteiro para a estrutura do player que queremos*/
 			player_id * player = find_player(head, npid);
 
@@ -131,18 +138,19 @@ int main(int argc, char* argv[]){
 			pos2[1] = player -> pos_monster[1];
 			send(client_sock, &pos2, sizeof(pos2), 0);
 
+
+			pthread_create(&player_thread, NULL, receive_Thread, &player);
+
+
+
+
+
+
+
+
+
 			/*mandar para os que ja la estavam*/
 			//send_spawn(player, head);
-
-
-			//NAO ESTA BEM --- RECEBE POSSIVEL NOVA POSICAO DO PACMAN
-			/*int npos[4];
-			if(err_rcv = recv(sock_fd, &npos, sizeof(npos), 0)>0){
-				printf("recebeu\n");
-				play new_move = check_new_pos(npos,new_board);		
-				send(sock_fd, &new_move, sizeof(new_move), 0);		
-			}*/
-
 
 			//Verificar se a lista esta a ficar feita
 			/*player_id * aux = head;

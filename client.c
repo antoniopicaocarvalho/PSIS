@@ -276,7 +276,7 @@ int main(int argc, char * argv[]){
 				//this function return the place where the mouse cursor is
 				get_board_place(event.motion .x, event.motion .y,
 												&x_new, &y_new);
-				
+
 				//Rato tem de ser adjacente a posicao anterior
 				if( ((x_new - x_pac == 1) && (y_new - y_pac == 0)) || 
 					((x_new - x_pac == -1) && (y_new - y_pac == 0)) ||
@@ -285,6 +285,7 @@ int main(int argc, char * argv[]){
 
 					play jogada_p = check_new_pos(x_new, y_new, x_pac, y_pac, new_board);
 
+					jogada_p.character = 'P';
 					//the old place is cleared
 					clear_place(x_pac, y_pac);
 					x_pac = jogada_p.x;
@@ -292,8 +293,8 @@ int main(int argc, char * argv[]){
 					
 					paint_pacman(x_pac, y_pac, rgb[0], rgb[1], rgb[2]);
 					
-					printf("move to x-%d y-%d\n", x_pac, y_pac);
-					//send(sock_fd, &msg, sizeof(msg), 0);
+					printf("Pacman move to x-%d y-%d\n", x_pac, y_pac);
+					send(sock_fd, &jogada_p, sizeof(jogada_p), 0);
 				}
 			}
 			//Setas
@@ -307,16 +308,17 @@ int main(int argc, char * argv[]){
 
 						play jogada_m = check_new_pos(x_new_m, y_new_m, init_monster[0],
 																 init_monster[1], new_board);
-
+						jogada_m.character = 'M';
 						//the old place is cleared
 						clear_place(init_monster[0], init_monster[1]);
 
 						paint_monster(jogada_m.x, jogada_m.y, rgb[0], rgb[1], rgb[2]);
-						
-						printf("move x-%d y-%d\n", jogada_m.x, jogada_m.y);
-						
+
 						init_monster[0] = jogada_m.x;
 						init_monster[1] = jogada_m.y;
+
+						printf("Monster move to x-%d y-%d\n", jogada_m.x, jogada_m.y);
+						send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
 
 					}
 					if (event.key.keysym.sym == SDLK_RIGHT ){
@@ -326,16 +328,17 @@ int main(int argc, char * argv[]){
 
 						play jogada_m = check_new_pos(x_new_m, y_new_m, init_monster[0],
 																 init_monster[1], new_board);
-
+						jogada_m.character = 'M';
 						//the old place is cleared
 						clear_place(init_monster[0], init_monster[1]);
 
 						paint_monster(jogada_m.x, jogada_m.y, rgb[0], rgb[1], rgb[2]);
-						
-						printf("move x-%d y-%d\n", jogada_m.x, jogada_m.y);
-						
+
 						init_monster[0] = jogada_m.x;
 						init_monster[1] = jogada_m.y;
+
+						printf("Monster move to x-%d y-%d\n", jogada_m.x, jogada_m.y);
+						send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
 
 					}
 					if (event.key.keysym.sym == SDLK_UP ){
@@ -345,16 +348,17 @@ int main(int argc, char * argv[]){
 
 						play jogada_m = check_new_pos(x_new_m, y_new_m, init_monster[0],
 																 init_monster[1], new_board);
-
+						jogada_m.character = 'M';
 						//the old place is cleared
 						clear_place(init_monster[0], init_monster[1]);
 
 						paint_monster(jogada_m.x, jogada_m.y, rgb[0], rgb[1], rgb[2]);
 						
-						printf("move x-%d y-%d\n", jogada_m.x, jogada_m.y);
-						
 						init_monster[0] = jogada_m.x;
 						init_monster[1] = jogada_m.y;
+
+						printf("Monster move to x-%d y-%d\n", jogada_m.x, jogada_m.y);
+						send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
 
 					}
 					if (event.key.keysym.sym == SDLK_DOWN ){
@@ -364,17 +368,17 @@ int main(int argc, char * argv[]){
 
 						play jogada_m = check_new_pos(x_new_m, y_new_m, init_monster[0],
 																 init_monster[1], new_board);
-
+						jogada_m.character = 'M';
 						//the old place is cleared
 						clear_place(init_monster[0], init_monster[1]);
 
 						paint_monster(jogada_m.x, jogada_m.y, rgb[0], rgb[1], rgb[2]);
 						
-						printf("move x-%d y-%d\n", jogada_m.x, jogada_m.y);
-						
 						init_monster[0] = jogada_m.x;
 						init_monster[1] = jogada_m.y;
 
+						printf("Monster move to x-%d y-%d\n", jogada_m.x, jogada_m.y);
+						send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
 					}
 
 			}
