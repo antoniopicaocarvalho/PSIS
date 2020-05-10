@@ -171,6 +171,7 @@ int main(int argc, char * argv[]){
 		printf("Há %d Bricks!!!\n",msg[0]); 
 		n_bricks = msg[0];
 	}
+
 	//Pinta os Bricks
 	for(int i = 0; i < n_bricks ; i++){
 		if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_brick(msg[0],msg[1]);
@@ -199,8 +200,8 @@ int main(int argc, char * argv[]){
 
 
 	/*PREPARAR PARA JOGAR*/
-	int x = 0;
-	int y = 0;
+	int x = x_other;
+	int y = y_other;
 	play jogada;
 	play *event_data;
 	SDL_Event new_event;
@@ -214,8 +215,9 @@ int main(int argc, char * argv[]){
 
 	SDL_PushEvent(&new_event);
 
-
 	int done = 0;
+	int npos[4];
+
 	while (!done){
 		while (SDL_PollEvent(&event)) {
 			if(event.type == SDL_QUIT) 
@@ -238,36 +240,46 @@ int main(int argc, char * argv[]){
 			//when the mouse mooves the pacman also moves
 			if(event.type == SDL_MOUSEMOTION){
 				int x_new, y_new;
+				int  new_pos[2];
 
 				//this function return the place where the mouse cursor is
 				get_board_place(event.motion .x, event.motion .y,
 												&x_new, &y_new);
-				//if the mouse moved to another place
-				if((x_new != x) || (y_new != y)){
-					//the old place is cleared
-					clear_place(x, y);
-					x = x_new;
-					y=y_new;
-					//decide what color to paint the monster
-					//and paint it
-					play jogada;
-					
-					paint_pacman(x, y, rgb[0], rgb[1], rgb[2]);
-					
-					printf("move x-%d y-%d\n", x,y);
-					jogada.x=x;
-					jogada.y=y;
-					//send(sock_fd, &msg, sizeof(msg), 0);
-				}
+//				npos[0] = x;
+//				npos[1] = y;
+//				npos[2] = x_new;
+//				npos[3] = y_new;
+
+				//Envia (possivel) nova posicao para verificar restrincoes
+//				send(sock_fd, &npos, sizeof(npos), 0);
+//				printf("client send possible pos\n");
+				play next_move;
+				next_move.x = x_new;
+				next_move.y = y_new;
+//				if(err_rcv = recv(sock_fd, &next_move, sizeof(next_move), 0)>0){
+//					printf("Recebeu\n");
+					//if the mouse moved to another place
+					if((next_move.x != x) || (next_move.y != y)){
+
+						//the old place is cleared
+						clear_place(x, y);
+						x = x_new;
+						y = y_new;
+
+						//decide what color to paint the monster
+						//and paint it
+						play jogada;
+						
+						paint_pacman(next_move.x, next_move.y, rgb[0], rgb[1], rgb[2]);
+						
+						printf("move x-%d y-%d\n", next_move.x, next_move.y);
+						jogada.x=x;
+						jogada.y=y;
+						//send(sock_fd, &msg, sizeof(msg), 0);
+					}
+//				}
 			}
-
-		
-
-			
 		}
-
-
-
 
 	}
 	printf("fim\n");
@@ -283,7 +295,7 @@ int main(int argc, char * argv[]){
 
 
 
-
+/*
 void create_board(board_info new_board) {
 
 	int cols = new_board.cols;
@@ -302,7 +314,7 @@ void create_board(board_info new_board) {
 		}
 	}
                         
-}
+}*/
 
 struct board_info un_serialize(int msg[]){
 

@@ -137,6 +137,19 @@ int main(int argc, char* argv[]){
 			/*mandar para os que ja la estavam*/
 			//send_spawn(player, head);
 
+
+
+
+
+			//NAO ESTA BEM --- RECEBE POSSIVEL NOVA POSICAO DO PACMAN
+			int npos[4];
+			if(err_rcv = recv(sock_fd, &npos, sizeof(npos), 0)>0){
+				printf("recebeu\n");
+				play new_move = check_new_pos(npos,new_board);		
+				send(sock_fd, &new_move, sizeof(new_move), 0);		
+			}
+
+
 			
 
 
@@ -183,9 +196,9 @@ board_info board_read() {
 
    	char ** board;
 	int i, j;
-	board = malloc(sizeof(char *) * (line+1));           
+	board = malloc(sizeof(char *) * (line));           
 	for ( i = 0 ; i < line; i++){
-		board[i] = malloc (sizeof(char) * (col+1));
+		board[i] = malloc (sizeof(char) * (col));
 		for (j = 0; j < col; j++){
 			board[i][j] = ' ';
 		}
@@ -353,4 +366,52 @@ void send_spawn(player_id * player, player_id * head){
 		}
 	aux = aux->next;
 	}
+}
+
+play check_new_pos(int npos[4], board_info new_board){
+
+	play next_move;
+
+	printf("AQUI 0 ");
+	//proxima posicao NAO pertence a board
+	if ( (new_board.lines < npos[2]) || (new_board.cols < npos[3]) ){
+		//e pode recuar
+		next_move.x = 2*npos[0] - npos[2];
+		next_move.y = 2*npos[1] - npos[3];
+		if (new_board.board[npos[2]][npos[3]] == '_'){
+			return(next_move);
+		}
+		//esta preso
+		else{	
+			next_move.x = npos[0];
+			next_move.y = npos[1];
+			return(next_move);
+		}
+	}
+	printf("AQUI 1");
+	//proxima posicao e um Brick
+	if (new_board.board[npos[2]][npos[3]] == 'B')
+	{
+		//e pode recuar
+		next_move.x = 2*npos[0] - npos[2];
+		next_move.y = 2*npos[1] - npos[3];
+		if (new_board.board[npos[2]][npos[3]] == '_'){
+			return(next_move);
+		}
+		//esta preso
+		else{	
+			next_move.x = npos[0];
+			next_move.y = npos[1];
+			return(next_move);
+		}
+	}
+	printf("AQUI 2");
+	//Pode avancar
+	if (new_board.board[npos[2]][npos[3]] == '_'){
+		next_move.x = npos[2];
+		next_move.y = npos[3];
+		return(next_move);
+	}
+
+	printf("AQUI");
 }
