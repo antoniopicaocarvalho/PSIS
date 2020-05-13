@@ -204,6 +204,8 @@ int main(int argc, char * argv[]){
 
 	send(sock_fd, &npid, sizeof(npid), 0);
 
+	printf(" sock_id do lado do cliente - %d\n", sock_fd);
+
 	//pthread_t thread_id;
 	//pthread_create(&thread_id, NULL, sync_receiver, NULL);
 	//send(sock_fd, &thread_id, sizeof(thread_id), 0);
@@ -247,6 +249,7 @@ int main(int argc, char * argv[]){
 
 	int done = 0;
 	int npos[4];
+
 
 	while (!done){
 		while (SDL_PollEvent(&event)) {
@@ -482,21 +485,33 @@ play check_new_pos(int x_next, int y_next, int x, int y,  board_info new_board){
 			return(next_move);
 		}
 	}
+
 	//proxima posicao e um Brick
 	if (new_board.board[x_next][y_next] == 'B')
 	{
 		//e pode recuar
 		next_move.x = 2*x - x_next;
 		next_move.y = 2*y - y_next;
-		if (new_board.board[next_move.x][next_move.y] == ' '){
-			return(next_move);
+
+		if ( (next_move.x < new_board.lines) && (next_move.y < new_board.cols) && (next_move.x >= 0) && (next_move.y >= 0) ){
+		
+			if (new_board.board[next_move.x][next_move.y] == ' '){
+				return(next_move);
+			}
+			//esta preso
+			else{	
+				next_move.x = x;
+				next_move.y = y;
+				return(next_move);
+			}
 		}
-		//esta preso
+
 		else{	
-			next_move.x = x;
-			next_move.y = y;
-			return(next_move);
-		}
+				next_move.x = x;
+				next_move.y = y;
+				return(next_move);
+			}
+
 	}
 	//Pode avancar
 	if (new_board.board[x_next][y_next] == ' '){
@@ -504,6 +519,7 @@ play check_new_pos(int x_next, int y_next, int x, int y,  board_info new_board){
 		next_move.y = y_next;
 		return(next_move);
 	}
+
 
 	//printf("AQUI");
 }

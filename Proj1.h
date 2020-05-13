@@ -64,3 +64,6 @@ struct board_info un_serialize(int msg[]);
 void * sync_receiver();
 
 play check_new_pos(int x_next, int y_next, int x, int y,  board_info new_board);
+
+
+void * receive_Thread(void * argc);

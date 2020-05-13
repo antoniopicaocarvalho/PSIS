@@ -19,26 +19,7 @@ int sock_fd;
 
 int server_socket;
 
-//INIT estrutura da lista de jogadores
-player_id * head = NULL;
 
-void * receive_Thread(void * argc){
-
-	player_id * player = (player_id*) argc;
-
-	play msg;
-	struct sockaddr_in client_addr;
-	int err_rcv;
-	socklen_t size_addr = sizeof(client_addr);
-
-	printf("---Ready to receive values--- \n");
-
-	while((err_rcv = recv(player->sock_id, &msg , sizeof(msg), 0)) >0 ){
-    	printf("Recebe pos do %c: %d %d\n",msg.character, msg.x, msg.y);
-	}
-
-	return (NULL);
-}
 
 
 
@@ -79,9 +60,14 @@ int main(int argc, char* argv[]){
 
 	pthread_t player_thread;
 
+
+	player_id * head = NULL;
+
 	while(1){ 
 		
 		client_sock = accept(sock_fd, (struct sockaddr*)&client, &size);
+
+		printf(" sock_id client correto - %d\n", client_sock);
 
 		if( client_sock == -1 ){
 			perror("accept");
@@ -96,7 +82,7 @@ int main(int argc, char* argv[]){
 
 		//RECEBE O PID
 		if ( (err_rcv = recv(client_sock, &npid, sizeof(npid), 0)) > 0 )
-			printf("recebeu o pid:  %d , do jogador %d \n", npid, n_player);
+		//	printf("recebeu o pid:  %d , do jogador %d \n", npid, n_player);
 
 
 		/*VERIFICAR SE HA ESPACO PARA MAIS 1 PLAYER*/
@@ -107,6 +93,8 @@ int main(int argc, char* argv[]){
 			player_id  * new_player = NULL;
 			new_player = init_player(new_player, new_board, npid, n_player, client_sock, player_thread); 
 			
+			printf(" sock_id client depois do init - %d\n", client_sock);
+
 			//Posicao do Pacman
 			first_pos[0] = new_player->pos_pacman[0];
 			first_pos[1] = new_player->pos_pacman[1];
@@ -127,7 +115,7 @@ int main(int argc, char* argv[]){
 			rgb[0] = player -> rgb[0];
 			rgb[1] = player -> rgb[1];
 			rgb[2] = player -> rgb[2];
-			printf("rgb - %d %d %d \n", rgb[0], rgb[1], rgb[2]);
+			//printf("rgb - %d %d %d \n", rgb[0], rgb[1], rgb[2]);
 			send(client_sock, &rgb, sizeof(rgb), 0);
 
 			pos1[0] = player -> pos_pacman[0];
@@ -139,7 +127,7 @@ int main(int argc, char* argv[]){
 			send(client_sock, &pos2, sizeof(pos2), 0);
 
 
-			pthread_create(&player_thread, NULL, receive_Thread, &player);
+			pthread_create(&player_thread, NULL, receive_Thread, (void *)player);
 
 
 
@@ -153,16 +141,42 @@ int main(int argc, char* argv[]){
 			//send_spawn(player, head);
 
 			//Verificar se a lista esta a ficar feita
-			/*player_id * aux = head;
+			player_id * aux = head;
 			while(aux){
 				printf("O jogador %d esta na lista\n", aux->player_n);
+				printf("com sock id - %d \n", aux->sock_id);
 				aux = aux -> next;
-			}*/
+			}
 		}
 	}
 	return (0);	
 }
  	
+
+
+
+void * receive_Thread(void * input){
+
+	
+	printf("dentro do thread receive %d\n", ((player_id*)input)->sock_id);
+
+	play msg;
+	int err_rcv;
+
+	printf("---Ready to receive values--- \n");
+
+	while((err_rcv = recv(((player_id*)input)->sock_id, &msg , sizeof(msg), 0)) >0 ){
+    	printf("Recebe pos do %c: %d %d\n",msg.character, msg.x, msg.y);
+	}
+
+	return (NULL);
+}
+
+
+
+
+
+
 
 
 
@@ -287,7 +301,7 @@ player_id * init_player (player_id * new_player, board_info new_board, pid_t npi
 		while(1){
 			aux_monster[0]=rand()%(l-1);
 			aux_monster[1]=rand()%(c-1);
-			printf("Posicao possivel: %d %d\n", aux_monster[0], aux_monster[1] );
+			//printf("Posicao possivel: %d %d\n", aux_monster[0], aux_monster[1] );
 			if( new_board.board[aux_monster[0]][aux_monster[1]] == ' ' && ((aux_pacman[0]!=aux_monster[0]) && (aux_pacman[1]!=aux_monster[1])) )
 				break;
 		}	
@@ -301,6 +315,8 @@ player_id * init_player (player_id * new_player, board_info new_board, pid_t npi
 		
 		new_player->sock_id = client_sock;
 		new_player->next = NULL;
+
+		printf(" sock_id client no init - %d\n", client_sock);
 
 		return(new_player);
 }
