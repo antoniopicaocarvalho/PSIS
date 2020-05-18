@@ -36,7 +36,8 @@ int main() {
 
    char letter;
 
-   int i, j;
+   int i;
+   int j;
 
 
   pos_board board[line][col];
@@ -47,6 +48,9 @@ int main() {
 
     }
   }
+
+  j=0;
+  i=-1;
 
 /*  int i, j;
   board = malloc(sizeof(pos_board) * (line));           
