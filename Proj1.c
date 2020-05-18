@@ -16,18 +16,30 @@
 
 
 int sock_fd;
-
 int server_socket;
 
 
+int dim[2];
+int n_bricks;
 
 
 
 int main(int argc, char* argv[]){
+
 	
 	//Leitura do ficheiro BOARD.TXT
-	board_info new_board;
+	pos_board ** new_board;
 	new_board = board_read();
+
+	//teste board_read()
+	int i, j; 
+	  for ( i = 0 ; i < dim[1]; i++){
+	    for (j = 0; j < dim[0]; j++){
+	      printf("%c", new_board[i][j].object);
+	    }
+	    printf("\n");
+	  }
+
 
 	//Criação da Socket
 	struct sockaddr_in local_addr = make_socket(&sock_fd);
@@ -43,20 +55,12 @@ int main(int argc, char* argv[]){
 	int n_player=0;
 	int client_sock;
 
-	int dim[2];
-	dim[0] = new_board.cols;
-	dim[1] = new_board.lines;
 	printf("board %d * %d \n", dim[0], dim[1]);
 	
 	pid_t npid;
 
 	int err_rcv;
 	int first_pos[2];
-
-	int pos1[2];
-	int pos2[2];
-
-	int rgb[3];
 
 	pthread_t player_thread;
 
@@ -67,8 +71,6 @@ int main(int argc, char* argv[]){
 		
 		client_sock = accept(sock_fd, (struct sockaddr*)&client, &size);
 
-		printf(" sock_id client correto - %d\n", client_sock);
-
 		if( client_sock == -1 ){
 			perror("accept");
 			exit(-1);
@@ -77,24 +79,24 @@ int main(int argc, char* argv[]){
 		n_player++;
 		printf("\n-- Temos %d jogadores --\n", n_player);
 
-		/*ENVIAR A BOARD INICIAL lida do ficheiro*/
+		//ENVIAR A BOARD INICIAL lida do ficheiro
 		send_board(client_sock, new_board);
+
+		printf("banana\n");
 
 		//RECEBE O PID
 		if ( (err_rcv = recv(client_sock, &npid, sizeof(npid), 0)) > 0 )
-		//	printf("recebeu o pid:  %d , do jogador %d \n", npid, n_player);
+			printf("recebeu o pid:  %d , do jogador %d \n", npid, n_player);
 
 
-		/*VERIFICAR SE HA ESPACO PARA MAIS 1 PLAYER*/
-		if (new_board.cols*new_board.lines - new_board.bricks < n_player*2) 
+		//VERIFICAR SE HA ESPACO PARA MAIS 1 PLAYER
+		if (dim[0]*dim[1] - n_bricks < n_player*2) 
 			printf("CAN'T FIT ANOTHER ONE -- DJ KHALED  \n");
-		else{ 
-			/*Novo jogador*/
+/*		else{ 
+			//Novo jogador
 			player_id  * new_player = NULL;
 			new_player = init_player(new_player, new_board, npid, n_player, client_sock, player_thread); 
 			
-			printf(" sock_id client depois do init - %d\n", client_sock);
-
 			//Posicao do Pacman
 			first_pos[0] = new_player->pos_pacman[0];
 			first_pos[1] = new_player->pos_pacman[1];
@@ -105,26 +107,14 @@ int main(int argc, char* argv[]){
 			first_pos[1] = new_player->pos_monster[1];
 			board_update ('M', new_board, first_pos);
 			
-			/*Ligar jogador a lista de Jogadores*/
+			//Ligar jogador a lista de Jogadores
 			head = list_player(new_player, head);
 			  
-			/*retorna ponteiro para a estrutura do player que queremos*/
-			player_id * player = find_player(head, npid);
+			//retorna ponteiro para a estrutura do player que queremos
+			//player_id * player = find_player(head, npid);
 
-			/*mandar informacoes para o novo jogador*/
-			rgb[0] = player -> rgb[0];
-			rgb[1] = player -> rgb[1];
-			rgb[2] = player -> rgb[2];
-			//printf("rgb - %d %d %d \n", rgb[0], rgb[1], rgb[2]);
-			send(client_sock, &rgb, sizeof(rgb), 0);
-
-			pos1[0] = player -> pos_pacman[0];
-			pos1[1] = player -> pos_pacman[1];
-			send(client_sock, &pos1, sizeof(pos1), 0);
-		
-			pos2[0] = player -> pos_monster[0];
-			pos2[1] = player -> pos_monster[1];
-			send(client_sock, &pos2, sizeof(pos2), 0);
+			send(client_sock, &n_player, sizeof(n_player), 0);
+			//send_board2(client_sock, head);
 
 
 			pthread_create(&player_thread, NULL, receive_Thread, (void *)player);
@@ -132,12 +122,7 @@ int main(int argc, char* argv[]){
 
 
 
-
-
-
-
-
-			/*mandar para os que ja la estavam*/
+			//mandar para os que ja la estavam
 			//send_spawn(player, head);
 
 			//Verificar se a lista esta a ficar feita
@@ -147,12 +132,13 @@ int main(int argc, char* argv[]){
 				printf("com sock id - %d \n", aux->sock_id);
 				aux = aux -> next;
 			}
-		}
+		}*/
 	}
+	
 	return (0);	
 }
  	
-
+/*
 
 
 void * receive_Thread(void * input){
@@ -169,31 +155,26 @@ void * receive_Thread(void * input){
     	printf("Recebe pos do %c: %d %d\n",msg.character, msg.x, msg.y);
 	}
 
+
+
 	return (NULL);
 }
 
 
+*/
+pos_board ** board_read() {
 
 
+  int col;
+  int line;
 
-
-
-
-
-board_info board_read() {
-
-	int col;
-	int line;
-
-	board_info game_board;
-
-	FILE *fp = fopen("board.txt", "r");
-	// test for files not existing. 
-         if (fp == NULL) 
-           {   
-             printf("Error! Could not open file\n"); 
-             exit(-1); 
-           }
+  FILE *fp = fopen("board.txt", "r");
+  // test for files not existing. 
+  if (fp == NULL) 
+  {   
+    printf("Error! Could not open file\n"); 
+    exit(-1); 
+  }
 
     //Reads first line of 'fp' file
    fscanf(fp, "%d %d", &col, &line);
@@ -201,69 +182,77 @@ board_info board_read() {
    printf("Cols: %d\n", col);
    printf("Lines: %d\n", line);
 
-   game_board.cols = col;
-   game_board.lines = line;
-   game_board.bricks = 0;
+   dim[0] = col;
+   dim[1] = line;
 
    char letter;
 
-   	char ** board;
-	int i, j;
-	board = malloc(sizeof(char *) * (line));           
+   int i;
+   int j;
+
+
+    pos_board ** board;
+	board = malloc(sizeof(pos_board *) * (line));           
 	for ( i = 0 ; i < line; i++){
-		board[i] = malloc (sizeof(char) * (col));
+		board[i] = malloc (sizeof(pos_board) * (col));
 		for (j = 0; j < col; j++){
-			board[i][j] = ' ';
+			board[i][j].object = ' ';
 		}
-		board[i][j] = '\0';
 	}
 
-	j = 0;
-    i = -1;
+  j=0;
+  i=-1;
 
-    while( (letter = getc(fp)) != EOF){    
-		//Block
-		if(letter == 'B') {
-			board[i][j] = 'B';
-			game_board.bricks++;
-		}
-		//New Column
-		j++;
-		//New Line
-		if (letter == '\n'){
-			i++;
-			j = 0;
-      	} 
+  while( (letter = getc(fp)) != EOF){    
+    //Block
+    if(letter == 'B') {
+      board[i][j].object = 'B';
+      n_bricks ++;
     }
-    game_board.board = board;
+    //New Column
+    j++;
+    //New Line
+    if (letter == '\n'){
+      i++;
+      j = 0;
+      } 
+  }
+  fclose(fp);
 
-    fclose(fp);
-
-    return game_board;
+  return board;
 }
 
-void send_board(int client_sock, board_info new_board){
-	//dim 0 -> line, dim 1 -> col
-	int dim[2];	
-	dim[1] = new_board.lines;
-	dim[0] = new_board.cols;
+
+
+
+
+
+
+
+
+
+
+
+
+void send_board(int client_sock, pos_board ** new_board){
 
 	//Envia Lines and cols 
 	send(client_sock, &dim, sizeof(dim), 0);
 
 	//Envia o numero de bricks
-	dim[0] = new_board.bricks;
-	send(client_sock, &dim, sizeof(dim), 0);
+	send(client_sock, &n_bricks, sizeof(int), 0);
+
+	int aux[2];
 
 	//Envia as coordenadas do Brick
-	for (int i = 0; i < new_board.lines; ++i)
+	for (int i = 0; i < dim[1]; ++i)
 	{
-		for (int j = 0; j < new_board.cols; ++j)
+		for (int j = 0; j < dim[0]; ++j)
 		{			
-			if(new_board.board[i][j] == 'B'){
-				dim[0] = j; //Colunas
-				dim[1] = i; //Linhas
-				send(client_sock, &dim, sizeof(dim), 0);
+			if(new_board[i][j].object == 'B'){
+				aux[0] = j; //Colunas
+				aux[1] = i; //Linhas
+				send(client_sock, &aux, sizeof(aux), 0);
 			}		
 		}		
 	}
@@ -272,7 +261,7 @@ void send_board(int client_sock, board_info new_board){
 	//printf("Enviou estrutura\n");
 }
 
-
+/*
 player_id * init_player (player_id * new_player, board_info new_board, pid_t npid, int n_player, int client_sock, pthread_t player_thread){
 
 		new_player = malloc(sizeof(player_id));  
@@ -287,7 +276,7 @@ player_id * init_player (player_id * new_player, board_info new_board, pid_t npi
 		int aux_pacman[2];
 
 
-		/*	DEFINIR PRIMEIRA POSICAO DO PACMAN*/
+		//	DEFINIR PRIMEIRA POSICAO DO PACMAN
 		while (1){ 
 			aux_pacman[0]=rand()%(l-1);
 			aux_pacman[1]=rand()%(c-1);
@@ -297,7 +286,7 @@ player_id * init_player (player_id * new_player, board_info new_board, pid_t npi
 		new_player->pos_pacman[0]=aux_pacman[0] ;
 		new_player->pos_pacman[1]=aux_pacman[1];
 
-		/*DEFINIR PRIMEIRA POSICAO DO MONSTER*/
+		//DEFINIR PRIMEIRA POSICAO DO MONSTER
 		while(1){
 			aux_monster[0]=rand()%(l-1);
 			aux_monster[1]=rand()%(c-1);
@@ -323,7 +312,7 @@ player_id * init_player (player_id * new_player, board_info new_board, pid_t npi
 
 board_info board_update (char item, board_info board, int pos[2]){
 
-	/*PRIMEIRAS POSIÇOES*/
+	//PRIMEIRAS POSIÇOES
 	board.board[pos[0]][pos[1]] = item;
 	return(board);
 }
@@ -340,7 +329,7 @@ player_id * list_player(player_id * new_player, player_id* head){
 	while (run -> next != NULL)
 		run = run -> next;
 			
-	run -> next = malloc(sizeof(player_id));	/*fazer malloc no init_player???*/
+	run -> next = malloc(sizeof(player_id));	
 	run -> next = new_player;
 	return (head);
 }	
@@ -385,3 +374,34 @@ void send_spawn(player_id * player, player_id * head){
 	aux = aux->next;
 	}
 }
+
+
+void send_board2(int client_sock, player_id* head){
+
+	int rgb[3];
+	int pos1[2];
+	int pos2[2];
+
+	player_id * aux = head;
+	while(aux){
+
+		//mandar informacoes para o novo jogador
+			rgb[0] = aux -> rgb[0];
+			rgb[1] = aux -> rgb[1];
+			rgb[2] = aux -> rgb[2];
+			//printf("rgb - %d %d %d \n", rgb[0], rgb[1], rgb[2]);
+			send(client_sock, &rgb, sizeof(rgb), 0);
+
+			pos1[0] = aux -> pos_pacman[0];
+			pos1[1] = aux -> pos_pacman[1];
+			send(client_sock, &pos1, sizeof(pos1), 0);
+		
+			pos2[0] = aux -> pos_monster[0];
+			pos2[1] = aux -> pos_monster[1];
+			send(client_sock, &pos2, sizeof(pos2), 0);
+
+			aux = aux -> next;
+	}
+
+}
+*/
