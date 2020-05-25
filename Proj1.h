@@ -56,9 +56,11 @@ pos_board ** board_read();
 
 void send_board(int client_sock, pos_board ** new_board);
 
-player_id * init_player (player_id * new_player, pos_board ** new_board, pid_t npid, int n_player, int client_sock, pthread_t player_thread);
+player_id * init_player (player_id * new_player, pos_board ** new_board, pid_t npid, int client_sock, pthread_t player_thread);
 
 void board_update (pos_board ** new_board, player_id  * new_player);
+
+void * comms_Thread(void * input);
 /*
 player_id * list_player(player_id * new_player, player_id* head);
 

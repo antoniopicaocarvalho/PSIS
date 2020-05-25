@@ -85,15 +85,7 @@ int main(int argc, char * argv[]){
 
 
 
-
-
-
-
-
-
-
-
-	play jogada;
+	/*play jogada;
 	play *event_data;
 	SDL_Event new_event;
 	
@@ -105,7 +97,7 @@ int main(int argc, char * argv[]){
 	new_event.user.data1 = event_data;
 
 	SDL_PushEvent(&new_event);
-
+*/
 	int done = 0;
 	int npos[4];
 
@@ -252,13 +244,15 @@ void * sync_receiver(){
 
 	while(err_rcv = recv(sock_fd, &msg1, sizeof(pos_board), 0)>0){
     	if (msg1.object == 'P'){
-    		printf("recebeu pacman ou caraças\n");
+    		//printf("recebeu pacman ou caraças\n");
+    		printf("pacman - %d - %d \n", msg1.x_next, msg1.y_next);
 			paint_pacman(msg1.x_next, msg1.y_next, msg1.r, msg1.g, msg1.b);
 			if(msg1.x != -1) clear_place(msg1.x, msg1.y);
 		}
 
 		if (msg1.object == 'M'){
-    		printf("recebeu monster ou pipi\n");
+    		//printf("recebeu monster ou pipi\n");
+    		printf("monster - %d - %d \n", msg1.x_next, msg1.y_next);
 			paint_monster(msg1.x_next, msg1.y_next, msg1.r, msg1.g, msg1.b);
 			if(msg1.x != -1) clear_place(msg1.x, msg1.y);
 		}
