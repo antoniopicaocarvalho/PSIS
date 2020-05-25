@@ -13,9 +13,12 @@ typedef struct pos_board{
 	int r;
 	int g;
 	int b;
+
+	int x_next;
+	int y_next;
+	int x;
+	int y; 
 }pos_board;
-
-
 
 
 
@@ -53,10 +56,10 @@ pos_board ** board_read();
 
 void send_board(int client_sock, pos_board ** new_board);
 
-/*player_id * init_player (player_id * new_player, board_info new_board, pid_t npid, int n_player, int client_sock, pthread_t player_thread);
+player_id * init_player (player_id * new_player, pos_board ** new_board, pid_t npid, int n_player, int client_sock, pthread_t player_thread);
 
-board_info board_update (char item, board_info board, int pos[2]);
-
+void board_update (pos_board ** new_board, player_id  * new_player);
+/*
 player_id * list_player(player_id * new_player, player_id* head);
 
 player_id* find_player (player_id * head, pid_t npid);

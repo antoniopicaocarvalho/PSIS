@@ -19,8 +19,10 @@ int sock_fd;
 int server_socket;
 
 
-int dim[2];
+int dim[2];// 0 -colunas  1-linhas
 int n_bricks;
+
+int comms[50]={0};  //array de socket_ids
 
 
 
@@ -82,7 +84,6 @@ int main(int argc, char* argv[]){
 		//ENVIAR A BOARD INICIAL lida do ficheiro
 		send_board(client_sock, new_board);
 
-		printf("banana\n");
 
 		//RECEBE O PID
 		if ( (err_rcv = recv(client_sock, &npid, sizeof(npid), 0)) > 0 )
@@ -92,33 +93,29 @@ int main(int argc, char* argv[]){
 		//VERIFICAR SE HA ESPACO PARA MAIS 1 PLAYER
 		if (dim[0]*dim[1] - n_bricks < n_player*2) 
 			printf("CAN'T FIT ANOTHER ONE -- DJ KHALED  \n");
-/*		else{ 
+		else{ 
 			//Novo jogador
 			player_id  * new_player = NULL;
 			new_player = init_player(new_player, new_board, npid, n_player, client_sock, player_thread); 
 			
-			//Posicao do Pacman
-			first_pos[0] = new_player->pos_pacman[0];
-			first_pos[1] = new_player->pos_pacman[1];
-			board_update ('P', new_board, first_pos);
-			
-			//Posicao do Monster
-			first_pos[0] = new_player->pos_monster[0];
-			first_pos[1] = new_player->pos_monster[1];
-			board_update ('M', new_board, first_pos);
+			board_update (new_board, new_player);
 			
 			//Ligar jogador a lista de Jogadores
-			head = list_player(new_player, head);
-			  
-			//retorna ponteiro para a estrutura do player que queremos
-			//player_id * player = find_player(head, npid);
+			//head = list_player(new_player, head);
 
-			send(client_sock, &n_player, sizeof(n_player), 0);
-			//send_board2(client_sock, head);
+			//atualizar o array de sock_ids
+			comms[n_player-1] = new_player-> sock_id;
 
 
-			pthread_create(&player_thread, NULL, receive_Thread, (void *)player);
+			//enviar posiçao inicial a todos os jogadores
+			for (int i = 0; i < n_player; ++i)
+			{
+				send(comms[i], &new_board[new_player -> pos_pacman[0]][new_player->pos_pacman[1]], sizeof (pos_board), 0);
+				send(comms[i], &new_board[new_player -> pos_monster[0]][new_player->pos_monster[1]], sizeof (pos_board), 0);
+			}
 
+			//pthread_create(&player_thread, NULL, receive_Thread, (void *)player);
+/*
 
 
 
@@ -131,8 +128,8 @@ int main(int argc, char* argv[]){
 				printf("O jogador %d esta na lista\n", aux->player_n);
 				printf("com sock id - %d \n", aux->sock_id);
 				aux = aux -> next;
-			}
-		}*/
+			}*/
+		}
 	}
 	
 	return (0);	
@@ -261,8 +258,8 @@ void send_board(int client_sock, pos_board ** new_board){
 	//printf("Enviou estrutura\n");
 }
 
-/*
-player_id * init_player (player_id * new_player, board_info new_board, pid_t npid, int n_player, int client_sock, pthread_t player_thread){
+
+player_id * init_player (player_id * new_player, pos_board ** new_board, pid_t npid, int n_player, int client_sock, pthread_t player_thread){
 
 		new_player = malloc(sizeof(player_id));  
 
@@ -270,20 +267,20 @@ player_id * init_player (player_id * new_player, board_info new_board, pid_t npi
 		new_player->player_n = n_player;
 		new_player->thread_id = player_thread;	
 
-		int c = new_board.cols; 
-		int l = new_board.lines;
+		int c = dim[0]; 
+		int l = dim[1];
 		int aux_monster[2];
 		int aux_pacman[2];
 
 
-		//	DEFINIR PRIMEIRA POSICAO DO PACMAN
+		//DEFINIR PRIMEIRA POSICAO DO PACMAN
 		while (1){ 
 			aux_pacman[0]=rand()%(l-1);
 			aux_pacman[1]=rand()%(c-1);
 			//printf("Posicao possivel: %d %d\n", aux_pacman[0], aux_pacman[1] );
-			if(new_board.board[aux_pacman[0]][aux_pacman[1]] == ' ') break;
+			if(new_board[aux_pacman[0]][aux_pacman[1]].object == ' ') break;
 		}
-		new_player->pos_pacman[0]=aux_pacman[0] ;
+		new_player->pos_pacman[0]=aux_pacman[0];
 		new_player->pos_pacman[1]=aux_pacman[1];
 
 		//DEFINIR PRIMEIRA POSICAO DO MONSTER
@@ -291,7 +288,7 @@ player_id * init_player (player_id * new_player, board_info new_board, pid_t npi
 			aux_monster[0]=rand()%(l-1);
 			aux_monster[1]=rand()%(c-1);
 			//printf("Posicao possivel: %d %d\n", aux_monster[0], aux_monster[1] );
-			if( new_board.board[aux_monster[0]][aux_monster[1]] == ' ' && ((aux_pacman[0]!=aux_monster[0]) && (aux_pacman[1]!=aux_monster[1])) )
+			if( new_board[aux_monster[0]][aux_monster[1]].object == ' ' && ((aux_pacman[0]!=aux_monster[0]) && (aux_pacman[1]!=aux_monster[1])) )
 				break;
 		}	
 		new_player->pos_monster[0]=aux_monster[0];
@@ -310,19 +307,45 @@ player_id * init_player (player_id * new_player, board_info new_board, pid_t npi
 		return(new_player);
 }
 
-board_info board_update (char item, board_info board, int pos[2]){
+
+void board_update (pos_board ** new_board, player_id  * new_player){
 
 	//PRIMEIRAS POSIÇOES
-	board.board[pos[0]][pos[1]] = item;
-	return(board);
+	new_board[new_player -> pos_pacman[0]][new_player->pos_pacman[1]].object = 'P';
+	new_board[new_player -> pos_pacman[0]][new_player->pos_pacman[1]].sock_id = new_player-> sock_id;
+	new_board[new_player -> pos_pacman[0]][new_player->pos_pacman[1]].r = new_player-> rgb[0];
+	new_board[new_player -> pos_pacman[0]][new_player->pos_pacman[1]].g = new_player-> rgb[1];
+	new_board[new_player -> pos_pacman[0]][new_player->pos_pacman[1]].b = new_player-> rgb[2];
+	new_board[new_player -> pos_pacman[0]][new_player->pos_pacman[1]].x_next = new_player-> pos_pacman[0];
+	new_board[new_player -> pos_pacman[0]][new_player->pos_pacman[1]].y_next = new_player-> pos_pacman[1];
+
+	new_board[new_player -> pos_pacman[0]][new_player->pos_pacman[1]].x = -1;
+	new_board[new_player -> pos_pacman[0]][new_player->pos_pacman[1]].y = -1;
+
+
+
+	new_board[new_player -> pos_monster[0]][new_player->pos_monster[1]].object = 'M';
+	new_board[new_player -> pos_monster[0]][new_player->pos_monster[1]].sock_id = new_player-> sock_id;
+	new_board[new_player -> pos_monster[0]][new_player->pos_monster[1]].r = new_player-> rgb[0];
+	new_board[new_player -> pos_monster[0]][new_player->pos_monster[1]].g = new_player-> rgb[1];
+	new_board[new_player -> pos_monster[0]][new_player->pos_monster[1]].b = new_player-> rgb[2];
+	new_board[new_player -> pos_monster[0]][new_player->pos_monster[1]].x_next = new_player-> pos_monster[0];
+	new_board[new_player -> pos_monster[0]][new_player->pos_monster[1]].y_next = new_player-> pos_monster[1];
+
+	new_board[new_player -> pos_monster[0]][new_player->pos_monster[1]].x = -1;
+	new_board[new_player -> pos_monster[0]][new_player->pos_monster[1]].y = -1;
+
+
+
 }
+
 
 player_id * list_player(player_id * new_player, player_id* head){   
 
 	if (head == NULL) {	  						
-			head = new_player;
-			return(head);
-		}
+		head = new_player;
+		return(head);
+	}
 
 	player_id * run = head;
 
@@ -334,6 +357,7 @@ player_id * list_player(player_id * new_player, player_id* head){
 	return (head);
 }	
 
+/*
 player_id * find_player (player_id * head, pid_t npid){
 
 	player_id * aux = head;
@@ -346,7 +370,7 @@ player_id * find_player (player_id * head, pid_t npid){
 	printf("NAO ENCONTROU NA LISTA TA FDD\n");
 	exit(-1);
 }
-
+/*
 
 void send_spawn(player_id * player, player_id * head){
 

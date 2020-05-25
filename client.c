@@ -78,33 +78,20 @@ int main(int argc, char * argv[]){
 
 	printf(" sock_id do lado do cliente - %d\n", sock_fd);
 
-	//pthread_t thread_id;
-	//pthread_create(&thread_id, NULL, sync_receiver, NULL);
+	pthread_t thread_id;
+	pthread_create(&thread_id, NULL, sync_receiver, NULL);
 	//send(sock_fd, &thread_id, sizeof(thread_id), 0);
 
-	//Recebe cor
-	if(err_rcv = recv(sock_fd, &rgb, sizeof(rgb), 0)>0) printf("recebeu cor ou caraças %d %d %d\n", rgb[1], rgb[2], rgb[0]);
-	
-	//Recebe pos_pacman e pinta
-	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_pacman(msg[0],msg[1], rgb[0], rgb[1], rgb[2]);
-
-	int init_pacman[2];
-	init_pacman[0] = msg[0];
-	init_pacman[1] = msg[1];
-
-	//Recebe pos_monster e pinta
-	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_monster(msg[0],msg[1], rgb[0], rgb[1], rgb[2]);	
-
-	int init_monster[2];
-	init_monster[0] = msg[0];
-	init_monster[1] = msg[1];
 
 
-	//PREPARAR PARA JOGAR
-	int x_pac = init_pacman[0];
-	int y_pac = init_pacman[1];
-	int x_mon = init_monster[0];
-	int y_mon = init_monster[1];
+
+
+
+
+
+
+
+
 
 	play jogada;
 	play *event_data;
@@ -130,7 +117,7 @@ int main(int argc, char * argv[]){
 			
 
 			//when the mouse mooves the pacman also moves
-/*			if(event.type == SDL_MOUSEMOTION){
+	/*			if(event.type == SDL_MOUSEMOTION){
 				int x_new = init_pacman[0];
 				int y_new = init_pacman[1];
 				//int new_pos[2];
@@ -243,9 +230,9 @@ int main(int argc, char * argv[]){
 						send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
 					}
 
-			}
+			}*/
 
-		}*/
+		}
 	}
 	printf("fim\n");
 	close_board_windows();
@@ -253,7 +240,37 @@ int main(int argc, char * argv[]){
 }
 
 
+
+
+
+void * sync_receiver(){
+
+	
+
+	pos_board msg1;
+	int err_rcv;
+
+	while(err_rcv = recv(sock_fd, &msg1, sizeof(pos_board), 0)>0){
+    	if (msg1.object == 'P'){
+    		printf("recebeu pacman ou caraças\n");
+			paint_pacman(msg1.x_next, msg1.y_next, msg1.r, msg1.g, msg1.b);
+			if(msg1.x != -1) clear_place(msg1.x, msg1.y);
+		}
+
+		if (msg1.object == 'M'){
+    		printf("recebeu monster ou pipi\n");
+			paint_monster(msg1.x_next, msg1.y_next, msg1.r, msg1.g, msg1.b);
+			if(msg1.x != -1) clear_place(msg1.x, msg1.y);
+		}
+
+	}
+
+
+
+	return (NULL);
 }
+
+
 /*
 play check_new_pos(int x_next, int y_next, int x, int y,  board_info new_board){
 
