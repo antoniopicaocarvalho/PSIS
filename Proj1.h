@@ -70,10 +70,10 @@ void send_spawn(player_id * player, player_id * head);
 //-----------------------------CLIENT-----------------------------
 
 
-/*
+
 
 void * sync_receiver();
-
+/*
 play check_new_pos(int x_next, int y_next, int x, int y,  board_info new_board);
 
 
