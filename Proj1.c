@@ -87,6 +87,8 @@ int main(int argc, char* argv[]){
 		//ENVIAR A BOARD INICIAL lida do ficheiro
 		send_board(client_sock, new_board);
 
+		send(client_sock, &client_sock, sizeof(int), 0);
+
 
 		//RECEBE O PID
 		if ( (err_rcv = recv(client_sock, &npid, sizeof(npid), 0)) > 0 )
@@ -139,6 +141,8 @@ int main(int argc, char* argv[]){
 void * comms_Thread(void * input){	
 	//printf("dentro do thread receive %c\n", ((pos_board**)input)[1][0].object);
 	int err_rcv;
+	pos_board play;
+	int sock = comms[n_player-1];
 
 	for (int i = 0; i < dim[1]; ++i)
 	{
@@ -146,20 +150,16 @@ void * comms_Thread(void * input){
 		{
 			if(((pos_board**)input)[i][j].object=='M' || ((pos_board**)input)[i][j].object=='P'){
 
-					send(comms[n_player-1], &((pos_board**)input)[i][j], sizeof (pos_board), 0);
+					send(sock, &((pos_board**)input)[i][j], sizeof (pos_board), 0);
 			}
 		}
 	}
 
-	/*while((err_rcv = recv(((player_id*)input)->sock_id, &msg , sizeof(msg), 0)) >0 ){
-    	printf("Recebe pos do %c: %d %d\n",msg.character, msg.x, msg.y);
-	}*/
-
-	while(1){
-
+	while((err_rcv = recv(sock, &play , sizeof(pos_board), 0)) >0 ){
+    	printf("Recebe pos do %c: %d %d\n",play.object, play.x_next, play.y_next);
+    	send(sock, &play, sizeof(pos_board), 0);
 	}
 
-	
 
 	return (NULL);
 }

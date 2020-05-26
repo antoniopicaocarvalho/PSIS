@@ -75,9 +75,5 @@ void send_spawn(player_id * player, player_id * head);
 
 
 void * sync_receiver();
-/*
-play check_new_pos(int x_next, int y_next, int x, int y,  board_info new_board);
+pos_board check_new_pos(int x_next, int y_next, int x, int y, char ** board, int dim[2]);
 
-
-void * receive_Thread(void * argc);
-*/

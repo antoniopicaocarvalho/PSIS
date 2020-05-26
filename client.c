@@ -7,6 +7,12 @@
 
 Uint32 Event_ShowCharacter;
 
+pos_board pac;
+pos_board mon;
+
+int sock_fd;
+int sock_id;
+
 
 int main(int argc, char * argv[]){
 
@@ -36,6 +42,7 @@ int main(int argc, char * argv[]){
 	int n_bricks = 0;
 	char ** board;
 
+
 	int i, j;
 	//Recebe linhas e colunas
 	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
@@ -59,6 +66,7 @@ int main(int argc, char * argv[]){
 	//Recebe numero de Bricks
 	if(err_rcv = recv(sock_fd, &bricks, sizeof(int), 0)>0){
 		printf("Há %d Bricks!!!\n",bricks); 
+		printf("sock id - %d\n", sock_fd);
 	}
 
 
@@ -71,12 +79,22 @@ int main(int argc, char * argv[]){
 	}
 
 	printf("Board Concluida\n");
+
+	if(err_rcv = recv(sock_fd, &sock_id, sizeof(int), 0)>0){
+			printf("sock id - %d\n", sock_id);
+	}
+
 	send(sock_fd, &npid, sizeof(npid), 0);
 
 
 
 
+
+
 	printf(" sock_id do lado do cliente - %d\n", sock_fd);
+
+
+
 
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, sync_receiver, NULL);
@@ -85,8 +103,8 @@ int main(int argc, char * argv[]){
 
 
 
-	/*play jogada;
-	play *event_data;
+	pos_board jogada;
+	/*play *event_data;
 	SDL_Event new_event;
 	
 	event_data = malloc(sizeof(play));
@@ -96,11 +114,20 @@ int main(int argc, char * argv[]){
 	new_event.type = Event_ShowCharacter;
 	new_event.user.data1 = event_data;
 
-	SDL_PushEvent(&new_event);
-*/
+	SDL_PushEvent(&new_event);*/
+
 	int done = 0;
 	int npos[4];
 
+	pac.x = pac.x_next;
+	pac.y = pac.y_next;
+	mon.x = mon.x_next;
+	mon.y = mon.y_next;
+
+	printf("pos %d - %d \n", pac.x, pac.y);
+
+	int x_new, y_new, x_pac, y_pac, x_new_m, y_new_m, x_mon, y_mon;
+	
 
 	while (!done){
 		while (SDL_PollEvent(&event)) {
@@ -108,10 +135,12 @@ int main(int argc, char * argv[]){
 				done = SDL_TRUE;
 			
 
-			//when the mouse mooves the pacman also moves
-	/*			if(event.type == SDL_MOUSEMOTION){
-				int x_new = init_pacman[0];
-				int y_new = init_pacman[1];
+				//when the mouse mooves the pacman also moves
+				if(event.type == SDL_MOUSEMOTION){
+				x_new = pac.x_next;
+				y_new = pac.y_next;
+				x_pac = pac.x;
+				y_pac = pac.y;
 				//int new_pos[2];
 
 				//this function return the place where the mouse cursor is
@@ -124,105 +153,93 @@ int main(int argc, char * argv[]){
 					((x_new - x_pac == 0) && (y_new - y_pac == 1)) || 
 					((x_new - x_pac == 0) && (y_new - y_pac == -1)) ){
 
-					play jogada_p = check_new_pos(x_new, y_new, x_pac, y_pac, new_board);
-
-					jogada_p.character = 'P';
-					//the old place is cleared
-					clear_place(x_pac, y_pac);
-					x_pac = jogada_p.x;
-					y_pac = jogada_p.y;
+					pos_board jogada_p = check_new_pos(x_new, y_new, x_pac, y_pac, board, dim);
+					jogada_p.object = pac.object;
+					jogada_p.sock_id = pac.sock_id;
+					jogada_p.r = pac.r;
+					jogada_p.g = pac.g;
+					jogada_p.b = pac.b;
 					
-					paint_pacman(x_pac, y_pac, rgb[0], rgb[1], rgb[2]);
-					
-					printf("Pacman move to x-%d y-%d\n", x_pac, y_pac);
 					send(sock_fd, &jogada_p, sizeof(jogada_p), 0);
 				}
 			}
 			//Setas
 			if(event.type == SDL_KEYDOWN){
-					int x_new_m, y_new_m;
+
 
 					if (event.key.keysym.sym == SDLK_LEFT ){
 
-						x_new_m = init_monster[0]-1;
-						y_new_m = init_monster[1];
+						x_new_m = mon.x_next-1;
+						y_new_m = mon.y_next;
+						x_mon = mon.x;
+						y_mon = mon.y;
 
-						play jogada_m = check_new_pos(x_new_m, y_new_m, init_monster[0],
-																 init_monster[1], new_board);
-						jogada_m.character = 'M';
-						//the old place is cleared
-						clear_place(init_monster[0], init_monster[1]);
+						pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
 
-						paint_monster(jogada_m.x, jogada_m.y, rgb[0], rgb[1], rgb[2]);
+						jogada_m.object = mon.object;
+						jogada_m.sock_id = mon.sock_id;
+						jogada_m.r = mon.r;
+						jogada_m.g = mon.g;
+						jogada_m.b = mon.b;;
 
-						init_monster[0] = jogada_m.x;
-						init_monster[1] = jogada_m.y;
-
-						printf("Monster move to x-%d y-%d\n", jogada_m.x, jogada_m.y);
 						send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
 
 					}
 					if (event.key.keysym.sym == SDLK_RIGHT ){
 
-						x_new_m = init_monster[0]+1;
-						y_new_m = init_monster[1];
+						x_new_m = mon.x_next+1;
+						y_new_m = mon.y_next;
+						x_mon = mon.x;
+						y_mon = mon.y;
 
-						play jogada_m = check_new_pos(x_new_m, y_new_m, init_monster[0],
-																 init_monster[1], new_board);
-						jogada_m.character = 'M';
-						//the old place is cleared
-						clear_place(init_monster[0], init_monster[1]);
+						pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
 
-						paint_monster(jogada_m.x, jogada_m.y, rgb[0], rgb[1], rgb[2]);
+						jogada_m.object = mon.object;
+						jogada_m.sock_id = mon.sock_id;
+						jogada_m.r = mon.r;
+						jogada_m.g = mon.g;
+						jogada_m.b = mon.b;;
 
-						init_monster[0] = jogada_m.x;
-						init_monster[1] = jogada_m.y;
-
-						printf("Monster move to x-%d y-%d\n", jogada_m.x, jogada_m.y);
 						send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
 
 					}
 					if (event.key.keysym.sym == SDLK_UP ){
 
-						x_new_m = init_monster[0];
-						y_new_m = init_monster[1]-1;
+						x_new_m = mon.x_next;
+						y_new_m = mon.y_next-1;
+						x_mon = mon.x;
+						y_mon = mon.y;
 
-						play jogada_m = check_new_pos(x_new_m, y_new_m, init_monster[0],
-																 init_monster[1], new_board);
-						jogada_m.character = 'M';
-						//the old place is cleared
-						clear_place(init_monster[0], init_monster[1]);
+						pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
 
-						paint_monster(jogada_m.x, jogada_m.y, rgb[0], rgb[1], rgb[2]);
-						
-						init_monster[0] = jogada_m.x;
-						init_monster[1] = jogada_m.y;
+						jogada_m.object = mon.object;
+						jogada_m.sock_id = mon.sock_id;
+						jogada_m.r = mon.r;
+						jogada_m.g = mon.g;
+						jogada_m.b = mon.b;;
 
-						printf("Monster move to x-%d y-%d\n", jogada_m.x, jogada_m.y);
 						send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
 
 					}
 					if (event.key.keysym.sym == SDLK_DOWN ){
 
-						x_new_m = init_monster[0];
-						y_new_m = init_monster[1]+1;
+						x_new_m = mon.x_next;
+						y_new_m = mon.y_next+1;
+						x_mon = mon.x;
+						y_mon = mon.y;
 
-						play jogada_m = check_new_pos(x_new_m, y_new_m, init_monster[0],
-																 init_monster[1], new_board);
-						jogada_m.character = 'M';
-						//the old place is cleared
-						clear_place(init_monster[0], init_monster[1]);
+						pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
 
-						paint_monster(jogada_m.x, jogada_m.y, rgb[0], rgb[1], rgb[2]);
-						
-						init_monster[0] = jogada_m.x;
-						init_monster[1] = jogada_m.y;
+						jogada_m.object = mon.object;
+						jogada_m.sock_id = mon.sock_id;
+						jogada_m.r = mon.r;
+						jogada_m.g = mon.g;
+						jogada_m.b = mon.b;;
 
-						printf("Monster move to x-%d y-%d\n", jogada_m.x, jogada_m.y);
 						send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
 					}
 
-			}*/
+			}
 
 		}
 	}
@@ -248,13 +265,24 @@ void * sync_receiver(){
     		printf("pacman - %d - %d \n", msg1.x_next, msg1.y_next);
 			paint_pacman(msg1.x_next, msg1.y_next, msg1.r, msg1.g, msg1.b);
 			if(msg1.x != -1) clear_place(msg1.x, msg1.y);
+
+
+			//guardar o pos_board deste jogador - pacman
+			if(msg1.sock_id == sock_id){  
+				pac = msg1;
+				printf("pos %d - %d \n", pac.x, pac.y);
 		}
+	}
 
 		if (msg1.object == 'M'){
     		//printf("recebeu monster ou pipi\n");
     		printf("monster - %d - %d \n", msg1.x_next, msg1.y_next);
 			paint_monster(msg1.x_next, msg1.y_next, msg1.r, msg1.g, msg1.b);
 			if(msg1.x != -1) clear_place(msg1.x, msg1.y);
+
+			//guardar o pos_board deste jogador - monster
+			if(msg1.sock_id == sock_id) mon = msg1;
+
 		}
 
 	}
@@ -265,64 +293,73 @@ void * sync_receiver(){
 }
 
 
-/*
-play check_new_pos(int x_next, int y_next, int x, int y,  board_info new_board){
 
-	play next_move;
-	next_move.x = x;
-	next_move.y = y;
+pos_board check_new_pos(int x_next, int y_next, int x, int y, char ** board, int dim[2]){
+
+	pos_board next_move;
+
+	next_move.x_next = x;
+	next_move.y_next = y;
 
 	//proxima posicao NAO pertence a board
-	if ( (x_next > new_board.lines-1) || (y_next > new_board.cols-1) || (x_next < 0) || (y_next < 0) ){
+	if ( (x_next > dim[1]-1) || (y_next > dim[0]-1) || (x_next < 0) || (y_next < 0) ){
 		//e pode recuar
-		next_move.x = 2*x - x_next;
-		next_move.y = 2*y - y_next;
-		if (new_board.board[next_move.x][next_move.y] == ' '){
-			return(next_move);
-		}
-		//esta preso
-		else{	
-			next_move.x = x;
-			next_move.y = y;
-			return(next_move);
-		}
-	}
-
-	//proxima posicao e um Brick
-	if (new_board.board[x_next][y_next] == 'B')
-	{
-		//e pode recuar
-		next_move.x = 2*x - x_next;
-		next_move.y = 2*y - y_next;
-
-		if ( (next_move.x < new_board.lines) && (next_move.y < new_board.cols) && (next_move.x >= 0) && (next_move.y >= 0) ){
-		
-			if (new_board.board[next_move.x][next_move.y] == ' '){
+		next_move.x_next = 2*x - x_next;
+		next_move.y_next = 2*y - y_next;
+		if ( (next_move.x_next < dim[1]) && (next_move.y_next < dim[0]) && (next_move.x_next >= 0) && (next_move.y_next >= 0) ){
+			if (board[next_move.x_next][next_move.y_next] == ' '){
 				return(next_move);
 			}
 			//esta preso
 			else{	
-				next_move.x = x;
-				next_move.y = y;
+				next_move.x_next = x;
+				next_move.y_next = y;
 				return(next_move);
 			}
 		}
 
 		else{	
-				next_move.x = x;
-				next_move.y = y;
+				next_move.x_next = x;
+				next_move.y_next = y;
+				return(next_move);
+			}
+
+	}
+
+	//proxima posicao e um Brick
+	if (board[x_next][y_next] == 'B')
+	{
+		//e pode recuar
+		next_move.x_next = 2*x - x_next;
+		next_move.y_next = 2*y - y_next;
+
+		if ( (next_move.x_next < dim[1]) && (next_move.y_next < dim[0]) && (next_move.x_next >= 0) && (next_move.y_next >= 0) ){
+		
+			if (board[next_move.x_next][next_move.y_next] == ' '){
+				return(next_move);
+			}
+			//esta preso
+			else{	
+				next_move.x_next = x;
+				next_move.y_next = y;
+				return(next_move);
+			}
+		}
+
+		else{	
+				next_move.x_next = x;
+				next_move.y_next = y;
 				return(next_move);
 			}
 
 	}
 	//Pode avancar
-	if (new_board.board[x_next][y_next] == ' '){
-		next_move.x = x_next;
-		next_move.y = y_next;
+	if (board[x_next][y_next] == ' '){
+		next_move.x_next = x_next;
+		next_move.y_next = y_next;
 		return(next_move);
 	}
 
 
 	//printf("AQUI");
 }
-*/
