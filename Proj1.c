@@ -137,9 +137,8 @@ int main(int argc, char* argv[]){
  	
 
 
-
 void * comms_Thread(void * input){	
-	//printf("dentro do thread receive %c\n", ((pos_board**)input)[1][0].object);
+
 	int err_rcv;
 	pos_board play;
 	int sock = comms[n_player-1];
@@ -156,51 +155,38 @@ void * comms_Thread(void * input){
 	}
 
 	while((err_rcv = recv(sock, &play , sizeof(pos_board), 0)) >0 ){
-    	printf("Recebe pos do %c: %d %d\n",play.object, play.x_next, play.y_next);
+    	printf("%c - next:  %d %d,  prev:  %d %d\n",play.object, play.x_next, play.y_next, play.x, play.y);
     	send(sock, &play, sizeof(pos_board), 0);
 	}
-
 
 	return (NULL);
 }
 
 
-
-
-
-
-
-
-
-
 pos_board ** board_read() {
 
+	int col, line;
 
-  int col;
-  int line;
+	FILE *fp = fopen("board.txt", "r");
+	// test for files not existing. 
+	if (fp == NULL) 
+	{   
+		printf("Error! Could not open file\n"); 
+		exit(-1); 
+	}
 
-  FILE *fp = fopen("board.txt", "r");
-  // test for files not existing. 
-  if (fp == NULL) 
-  {   
-    printf("Error! Could not open file\n"); 
-    exit(-1); 
-  }
+	//Reads first line of 'fp' file
+	fscanf(fp, "%d %d", &col, &line);
 
-    //Reads first line of 'fp' file
-   fscanf(fp, "%d %d", &col, &line);
+	printf("Cols: %d\n", col);
+	printf("Lines: %d\n", line);
 
-   printf("Cols: %d\n", col);
-   printf("Lines: %d\n", line);
+    dim[0] = col;
+    dim[1] = line;
 
-   dim[0] = col;
-   dim[1] = line;
+    char letter;
 
-   char letter;
-
-   int i;
-   int j;
-
+    int i, j;
 
     pos_board ** board;
 	board = malloc(sizeof(pos_board *) * (line));           
@@ -211,26 +197,26 @@ pos_board ** board_read() {
 		}
 	}
 
-  j=0;
-  i=-1;
+	j = 0;
+	i = -1;
 
-  while( (letter = getc(fp)) != EOF){    
-    //Block
-    if(letter == 'B') {
-      board[i][j].object = 'B';
-      n_bricks ++;
-    }
-    //New Column
-    j++;
-    //New Line
-    if (letter == '\n'){
-      i++;
-      j = 0;
-      } 
-  }
-  fclose(fp);
+	while( (letter = getc(fp)) != EOF){    
+		//Block
+		if(letter == 'B') {
+			board[i][j].object = 'B';
+			n_bricks ++;
+		}
+		//New Column
+		j++;
+		//New Line
+		if (letter == '\n'){
+			i++;
+			j = 0;
+		} 
+	}
+	fclose(fp);
 
-  return board;
+  	return board;
 }
 
 void send_board(int client_sock, pos_board ** new_board){
@@ -304,7 +290,7 @@ player_id * init_player (player_id * new_player, pos_board ** new_board, pid_t n
 		new_player->sock_id = client_sock;
 		new_player->next = NULL;
 
-		printf(" sock_id client no init - %d\n", client_sock);
+		//printf(" sock_id client no init - %d\n", client_sock);
 
 		return(new_player);
 }
@@ -312,7 +298,7 @@ player_id * init_player (player_id * new_player, pos_board ** new_board, pid_t n
 
 void board_update (pos_board ** new_board, player_id  * new_player){
 
-	//PRIMEIRAS POSIÇOES
+	//PRIMEIRAS POSIÇOES - Pacman
 	new_board[new_player -> pos_pacman[0]][new_player->pos_pacman[1]].object = 'P';
 	new_board[new_player -> pos_pacman[0]][new_player->pos_pacman[1]].sock_id = new_player-> sock_id;
 	new_board[new_player -> pos_pacman[0]][new_player->pos_pacman[1]].r = new_player-> rgb[0];
@@ -324,8 +310,7 @@ void board_update (pos_board ** new_board, player_id  * new_player){
 	new_board[new_player -> pos_pacman[0]][new_player->pos_pacman[1]].x = -1;
 	new_board[new_player -> pos_pacman[0]][new_player->pos_pacman[1]].y = -1;
 
-
-
+	//PRIMEIRAS POSIÇOES - Monster
 	new_board[new_player -> pos_monster[0]][new_player->pos_monster[1]].object = 'M';
 	new_board[new_player -> pos_monster[0]][new_player->pos_monster[1]].sock_id = new_player-> sock_id;
 	new_board[new_player -> pos_monster[0]][new_player->pos_monster[1]].r = new_player-> rgb[0];
@@ -336,9 +321,6 @@ void board_update (pos_board ** new_board, player_id  * new_player){
 
 	new_board[new_player -> pos_monster[0]][new_player->pos_monster[1]].x = -1;
 	new_board[new_player -> pos_monster[0]][new_player->pos_monster[1]].y = -1;
-
-
-
 }
 
 

@@ -34,8 +34,8 @@ int create_board_window(int dim_x, int dim_y){
 		exit(-1);
 	}
 	window = SDL_CreateWindow("PacMan",
-		SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,
-		screen_width,screen_height, 0);
+	SDL_WINDOWPOS_UNDEFINED,SDL_WINDOWPOS_UNDEFINED,
+	screen_width,screen_height, 0);
 	if (window == NULL){
 		printf( "Window could not created! SDL_Error: %s\n", SDL_GetError() );
 		exit(-1);
