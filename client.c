@@ -114,8 +114,14 @@ int main(int argc, char * argv[]){
 
 	while (!done){
 		while (SDL_PollEvent(&event)) {
-			if(event.type == SDL_QUIT) 
+			if(event.type == SDL_QUIT) {
+				mon.object = 'q';
+				pac.object = 'Q';
+				send(sock_fd, &mon, sizeof(pos_board), 0);
+				send(sock_fd, &pac, sizeof(pos_board), 0);
+
 				done = SDL_TRUE;
+			}
 
 			//when the mouse mooves the pacman also moves
 			if(event.type == SDL_MOUSEMOTION){
@@ -260,6 +266,10 @@ void * sync_receiver(){
 				flag2 = 1;
 			}
 
+		}
+		if (msg1.object == 'q' || msg1.object == 'Q')
+		{
+			clear_place(msg1.x, msg1.y);
 		}
 
 	}

@@ -141,7 +141,12 @@ void * comms_Thread(void * input){
 
 	int err_rcv;
 	pos_board play;
+	pos_board clean;
+	clean.object = ' ';
 	int sock = comms[n_player-1];
+	int k = 0;
+
+	
 
 	for (int i = 0; i < dim[1]; ++i)
 	{
@@ -154,11 +159,50 @@ void * comms_Thread(void * input){
 		}
 	}
 
+
 	while((err_rcv = recv(sock, &play , sizeof(pos_board), 0)) >0 ){
     	printf("%c - next:  %d %d,  prev:  %d %d\n",play.object, play.x_next, play.y_next, play.x, play.y);
-    	send(sock, &play, sizeof(pos_board), 0);
-	}
+    	if (play.object == 'q'){
+    		 ((pos_board**)input)[play.y][play.x] = clean;
+    		 for (int i = 0; i < n_player; ++i) if (comms[i]!=sock) send(comms[i], &play, sizeof (pos_board), 0);  //chups
+    	}
+    	else if (play.object == 'Q')
+    	{
+    		((pos_board**)input)[play.y][play.x] = clean;
+    		n_player --;
+    		k=0;
+    		while (comms[k] != play.sock_id) k++;
+    		if (k!=n_player) comms[k] = comms[n_player];
+    		for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
+    	}
+    	else{  
 
+    		pos_board aux = ((pos_board**)input)[play.y_next][play.x_next];
+    		if((aux.object == 'P' && play.object == 'P') ||  
+    			(aux.object == 'M' && play.object == 'M') || (aux.r == play.r && aux.g == play.g && aux.b == play.b)){
+
+    			aux.x_next = play.x;
+				aux.y_next = play.y;
+				aux.x = play.x_next;
+				aux.y = play.y_next;
+				((pos_board**)input)[play.y][play.x] = aux;
+				for (int i = 0; i < n_player; ++i) send(comms[i], &aux, sizeof (pos_board), 0);
+				play.x = play.x_next;
+				play.y = play.y_next;
+
+				((pos_board**)input)[play.y_next][play.x_next] = play;
+		    	for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
+
+
+    		}
+	    	else{
+
+		    	((pos_board**)input)[play.y_next][play.x_next] = play;
+		    	((pos_board**)input)[play.y][play.x] = clean;
+		    	for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
+	    	}
+    	}
+	}
 	return (NULL);
 }
 
