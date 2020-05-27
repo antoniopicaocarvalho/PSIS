@@ -269,7 +269,7 @@ void * sync_receiver(){
 		}
 		if (msg1.object == 'q' || msg1.object == 'Q')
 		{
-			clear_place(msg1.x, msg1.y);
+			clear_place(msg1.x_next, msg1.y_next);
 		}
 
 	}

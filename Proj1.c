@@ -82,7 +82,7 @@ int main(int argc, char* argv[]){
 		}
 
 		n_player++;
-		printf("\n-- Temos %d jogadores --\n", n_player);
+		printf("\n-- Entrou um jogador (Total: %d) --\n", n_player);
 
 		//ENVIAR A BOARD INICIAL lida do ficheiro
 		send_board(client_sock, new_board);
@@ -91,8 +91,9 @@ int main(int argc, char* argv[]){
 
 
 		//RECEBE O PID
-		if ( (err_rcv = recv(client_sock, &npid, sizeof(npid), 0)) > 0 )
-			printf("recebeu o pid:  %d , do jogador %d \n", npid, n_player);
+		if ( (err_rcv = recv(client_sock, &npid, sizeof(npid), 0)) > 0 ) {
+			//printf("recebeu o pid:  %d , do jogador %d \n", npid, n_player);
+		}
 
 
 		//VERIFICAR SE HA ESPACO PARA MAIS 1 PLAYER
@@ -161,19 +162,21 @@ void * comms_Thread(void * input){
 
 
 	while((err_rcv = recv(sock, &play , sizeof(pos_board), 0)) >0 ){
-    	printf("%c - next:  %d %d,  prev:  %d %d\n",play.object, play.x_next, play.y_next, play.x, play.y);
+
+    	
     	if (play.object == 'q'){
-    		 ((pos_board**)input)[play.y][play.x] = clean;
+    		 ((pos_board**)input)[play.y_next][play.x_next] = clean;
     		 for (int i = 0; i < n_player; ++i) if (comms[i]!=sock) send(comms[i], &play, sizeof (pos_board), 0);  //chups
     	}
     	else if (play.object == 'Q')
     	{
-    		((pos_board**)input)[play.y][play.x] = clean;
+    		((pos_board**)input)[play.y_next][play.x_next] = clean;
     		n_player --;
     		k=0;
     		while (comms[k] != play.sock_id) k++;
     		if (k!=n_player) comms[k] = comms[n_player];
     		for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
+    		printf("\n-- Saiu um jogador (Total: %d) --\n", n_player);
     	}
     	else{  
 
@@ -192,7 +195,8 @@ void * comms_Thread(void * input){
 
 				((pos_board**)input)[play.y_next][play.x_next] = play;
 		    	for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
-
+				//Jogada Realizada
+				printf("%c - next:  %d %d,  prev:  %d %d\n",play.object, play.x_next, play.y_next, play.x, play.y);
 
     		}
 	    	else{
@@ -200,6 +204,8 @@ void * comms_Thread(void * input){
 		    	((pos_board**)input)[play.y_next][play.x_next] = play;
 		    	((pos_board**)input)[play.y][play.x] = clean;
 		    	for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
+		    	//Jogada Realizada
+				printf("%c - next:  %d %d,  prev:  %d %d\n",play.object, play.x_next, play.y_next, play.x, play.y);
 	    	}
     	}
 	}
