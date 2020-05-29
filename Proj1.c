@@ -8,6 +8,8 @@
 #include <stdlib.h> 
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+#include <math.h>
 #include "UI_library.h"
 #include "Proj1.h"
 #include "sock_init.h"
@@ -147,6 +149,12 @@ void * comms_Thread(void * input){
 	int sock = comms[n_player-1];
 	int k = 0;
 
+	pthread_mutex_t board_mutex;
+
+	clock_t start, aux, t_play, tt;
+    double cpu_time_used;
+    int count = 0;
+
 	
 
 	for (int i = 0; i < dim[1]; ++i)
@@ -159,56 +167,93 @@ void * comms_Thread(void * input){
 			}
 		}
 	}
+	start = clock();
+	double aux_t = 0;
+		while((err_rcv = recv(sock, &play , sizeof(pos_board), 0)) >0 ){
+			tt = clock();
+			cpu_time_used = (double)(tt - start) / CLOCKS_PER_SEC;
+			printf("cpu time - %f\n", cpu_time_used);
+			if (floor(cpu_time_used) - aux_t > 0){
+				count = 0;
+				printf("count zerou\n");
+				aux_t = floor(cpu_time_used);
+			} 
+	    	if (play.object == 'q'){
 
+	    		pthread_mutex_lock(&board_mutex);
+	    		((pos_board**)input)[play.y_next][play.x_next] = clean;
+	    		pthread_mutex_unlock(&board_mutex);
 
-	while((err_rcv = recv(sock, &play , sizeof(pos_board), 0)) >0 ){
-
-    	
-    	if (play.object == 'q'){
-    		 ((pos_board**)input)[play.y_next][play.x_next] = clean;
-    		 for (int i = 0; i < n_player; ++i) if (comms[i]!=sock) send(comms[i], &play, sizeof (pos_board), 0);  //chups
-    	}
-    	else if (play.object == 'Q')
-    	{
-    		((pos_board**)input)[play.y_next][play.x_next] = clean;
-    		n_player --;
-    		k=0;
-    		while (comms[k] != play.sock_id) k++;
-    		if (k!=n_player) comms[k] = comms[n_player];
-    		for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
-    		printf("\n-- Saiu um jogador (Total: %d) --\n", n_player);
-    	}
-    	else{  
-
-    		pos_board aux = ((pos_board**)input)[play.y_next][play.x_next];
-    		if((aux.object == 'P' && play.object == 'P') ||  
-    			(aux.object == 'M' && play.object == 'M') || (aux.r == play.r && aux.g == play.g && aux.b == play.b)){
-
-    			aux.x_next = play.x;
-				aux.y_next = play.y;
-				aux.x = play.x_next;
-				aux.y = play.y_next;
-				((pos_board**)input)[play.y][play.x] = aux;
-				for (int i = 0; i < n_player; ++i) send(comms[i], &aux, sizeof (pos_board), 0);
-				play.x = play.x_next;
-				play.y = play.y_next;
-
-				((pos_board**)input)[play.y_next][play.x_next] = play;
-		    	for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
-				//Jogada Realizada
-				printf("%c - next:  %d %d,  prev:  %d %d\n",play.object, play.x_next, play.y_next, play.x, play.y);
-
-    		}
-	    	else{
-
-		    	((pos_board**)input)[play.y_next][play.x_next] = play;
-		    	((pos_board**)input)[play.y][play.x] = clean;
-		    	for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
-		    	//Jogada Realizada
-				printf("%c - next:  %d %d,  prev:  %d %d\n",play.object, play.x_next, play.y_next, play.x, play.y);
+	    		 for (int i = 0; i < n_player; ++i) if (comms[i]!=sock) send(comms[i], &play, sizeof (pos_board), 0);  
 	    	}
-    	}
-	}
+	    	else if (play.object == 'Q')
+	    	{
+	    		pthread_mutex_lock(&board_mutex);
+	    		((pos_board**)input)[play.y_next][play.x_next] = clean;
+	    		pthread_mutex_unlock(&board_mutex);
+
+	    		n_player --;
+	    		k=0;
+	    		while (comms[k] != play.sock_id) k++;
+	    		if (k!=n_player) comms[k] = comms[n_player];
+	    		for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
+	    		printf("\n-- Saiu um jogador (Total: %d) --\n", n_player);
+	    	}
+	    	else{  
+	    		t_play = clock();
+	    		count ++;
+
+	    		if (count <= 2){
+	    			pos_board aux = ((pos_board**)input)[play.y_next][play.x_next];
+	    			if((aux.object == 'P' && play.object == 'P') ||  
+	    			(aux.object == 'M' && play.object == 'M') || (aux.r == play.r && aux.g == play.g && aux.b == play.b)){
+
+	    			//start time
+	    			//init play_count
+	    			//play_count++;
+	    			//if(count == 2 && time)
+
+	    			aux.x_next = play.x;
+					aux.y_next = play.y;
+					aux.x = play.x_next;
+					aux.y = play.y_next;
+
+					pthread_mutex_lock(&board_mutex);
+	    			((pos_board**)input)[play.y][play.x] = aux;
+	    			pthread_mutex_unlock(&board_mutex);
+
+					for (int i = 0; i < n_player; ++i) send(comms[i], &aux, sizeof (pos_board), 0);
+					play.x = play.x_next;
+					play.y = play.y_next;
+
+			    	pthread_mutex_lock(&board_mutex);
+	    			((pos_board**)input)[play.y_next][play.x_next] = play;
+	    			pthread_mutex_unlock(&board_mutex);
+
+			    	for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
+					//Jogada Realizada
+					printf("%c - next:  %d %d,  prev:  %d %d\n",play.object, play.x_next, play.y_next, play.x, play.y);
+
+		    		}
+			    	else{
+
+				    	pthread_mutex_lock(&board_mutex);
+		    			((pos_board**)input)[play.y_next][play.x_next] = play;
+		    			pthread_mutex_unlock(&board_mutex);
+
+				    	pthread_mutex_lock(&board_mutex);
+		    			((pos_board**)input)[play.y][play.x] = clean;
+		    			pthread_mutex_unlock(&board_mutex);
+
+				    	for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
+				    	//Jogada Realizada
+						printf("%c - next:  %d %d,  prev:  %d %d\n",play.object, play.x_next, play.y_next, play.x, play.y);
+			    	}
+	    			
+	    		}
+	    	}
+		}
+	
 	return (NULL);
 }
 
