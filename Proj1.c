@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 #include <math.h>
 #include "UI_library.h"
 #include "Proj1.h"
@@ -145,16 +146,26 @@ void * comms_Thread(void * input){
 	int err_rcv;
 	pos_board play;
 	pos_board clean;
+	pos_board pacman;
+	pos_board monster;
+
+	pos_board aux2;
+	pos_board aux1;
+
 	clean.object = ' ';
 	int sock = comms[n_player-1];
 	int k = 0;
+	int done = 1;
+	int count_p = 0;
+	int count_m = 0;
 
 	pthread_mutex_t board_mutex;
 
-	clock_t start, aux, t_play, tt;
-    double cpu_time_used;
-    int count = 0;
+	int px, py;
 
+
+
+	
 	
 
 	for (int i = 0; i < dim[1]; ++i)
@@ -163,21 +174,77 @@ void * comms_Thread(void * input){
 		{
 			if(((pos_board**)input)[i][j].object=='M' || ((pos_board**)input)[i][j].object=='P'){
 
-					send(sock, &((pos_board**)input)[i][j], sizeof (pos_board), 0);
+				send(sock, &((pos_board**)input)[i][j], sizeof (pos_board), 0);
+
+				if (((pos_board**)input)[i][j].sock_id == sock)
+				{
+					if (((pos_board**)input)[i][j].object=='M') monster = ((pos_board**)input)[i][j];
+					if (((pos_board**)input)[i][j].object=='P') pacman = ((pos_board**)input)[i][j];
+				}	
 			}
 		}
 	}
-	start = clock();
+
+
+	struct tm * local;
+	time_t t = time(NULL);
+	local = localtime(&t);
+
+	int time_aux, time1, time_pac, time_mon;
+	int time_init = (local -> tm_min)*60 + local->tm_sec;	
+
+	time1 = time_init;
+	time_pac = time_init;
+	time_mon = time_init;
+
+	printf("inicio - %d\n", time_init);
+
 	double aux_t = 0;
-		while((err_rcv = recv(sock, &play , sizeof(pos_board), 0)) >0 ){
-			tt = clock();
-			cpu_time_used = (double)(tt - start) / CLOCKS_PER_SEC;
-			printf("cpu time - %f\n", cpu_time_used);
-			if (floor(cpu_time_used) - aux_t > 0){
-				count = 0;
-				printf("count zerou\n");
-				aux_t = floor(cpu_time_used);
-			} 
+	while(done){ 
+		struct tm * local1;
+		time_t t1 = time(NULL);
+		local1 = localtime(&t1);
+
+		time_aux = (local1 -> tm_min)*60 + local1->tm_sec;	
+
+		//passa 1s
+		if (time_aux-time1 >= 1) 
+		{
+			time1 = time_aux;
+			printf("Tempo - %d\n",time_aux);
+			count_p = 0;
+			count_m = 0;
+		}
+		//passa 30s
+		if (time_aux-time_pac >= 6) 
+		{
+			aux1 = pacman;
+			while (1){ 
+				py=rand()%(dim[1]-1);
+				px=rand()%(dim[0]-1);
+				if(((pos_board**)input)[py][px].object == ' ') break;
+			}
+
+			aux1.x_next = px;
+			aux1.y_next = py;
+			aux1.x = pacman.x_next;
+			aux1.y = pacman.y_next;
+
+			pthread_mutex_lock(&board_mutex);
+	    	((pos_board**)input)[pacman.y_next][pacman.x_next] = clean;
+	    	((pos_board**)input)[aux1.y_next][aux1.x_next] = aux1;
+	    	pthread_mutex_unlock(&board_mutex);
+
+	    	for (int i = 0; i < n_player; ++i) send(comms[i], &aux1, sizeof (pos_board), 0);
+	    	pacman = aux1;
+	    	time_pac = time_aux;
+		}
+
+
+
+		if((err_rcv = recv(sock, &play , sizeof(pos_board), 0)) >0 ){
+			
+
 	    	if (play.object == 'q'){
 
 	    		pthread_mutex_lock(&board_mutex);
@@ -191,7 +258,7 @@ void * comms_Thread(void * input){
 	    		pthread_mutex_lock(&board_mutex);
 	    		((pos_board**)input)[play.y_next][play.x_next] = clean;
 	    		pthread_mutex_unlock(&board_mutex);
-
+	    		done = 0;
 	    		n_player --;
 	    		k=0;
 	    		while (comms[k] != play.sock_id) k++;
@@ -200,18 +267,24 @@ void * comms_Thread(void * input){
 	    		printf("\n-- Saiu um jogador (Total: %d) --\n", n_player);
 	    	}
 	    	else{  
-	    		t_play = clock();
-	    		count ++;
-
-	    		if (count <= 2){
+	    		
+	    		if ((count_p < 2 && play.object == 'P') || (count_m < 2 && play.object == 'M')){
 	    			pos_board aux = ((pos_board**)input)[play.y_next][play.x_next];
+
+	    			if(play.object == 'P'){
+	    				time_pac = time_aux;
+	    				pacman = play;
+	    				count_p ++;
+	    			}
+
+	    			if(play.object == 'M'){
+	    				time_mon = time_aux;
+	    				monster = play;
+	    				count_m ++;
+	    			}
+
 	    			if((aux.object == 'P' && play.object == 'P') ||  
 	    			(aux.object == 'M' && play.object == 'M') || (aux.r == play.r && aux.g == play.g && aux.b == play.b)){
-
-	    			//start time
-	    			//init play_count
-	    			//play_count++;
-	    			//if(count == 2 && time)
 
 	    			aux.x_next = play.x;
 					aux.y_next = play.y;
@@ -251,9 +324,18 @@ void * comms_Thread(void * input){
 			    	}
 	    			
 	    		}
+	    		else{
+
+	    			aux2 = play;
+	    			aux2.x_next = play.x;
+	    			aux2.y_next = play.y;
+	    			for (int i = 0; i < n_player; ++i) send(comms[i], &aux2, sizeof (pos_board), 0);
+
+
+	    		}
 	    	}
 		}
-	
+	}
 	return (NULL);
 }
 
