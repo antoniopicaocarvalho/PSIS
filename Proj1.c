@@ -30,6 +30,11 @@ int comms[50]={0};  //array de socket_ids
 
 int n_player = 0;
 
+int time_pac, time_mon;
+
+
+
+
 
 
 int main(int argc, char* argv[]){
@@ -161,13 +166,8 @@ void * comms_Thread(void * input){
 
 	pthread_mutex_t board_mutex;
 
-	int px, py;
 
-
-
-	
-	
-
+	//manda a board para o jogador novo e guarda as estruturas pos_board das posiçoes do respetivo
 	for (int i = 0; i < dim[1]; ++i)
 	{
 		for (int j = 0; j < dim[0]; ++j)
@@ -185,63 +185,40 @@ void * comms_Thread(void * input){
 		}
 	}
 
-
 	struct tm * local;
 	time_t t = time(NULL);
 	local = localtime(&t);
 
-	int time_aux, time1, time_pac, time_mon;
+	int time_aux, time1;
 	int time_init = (local -> tm_min)*60 + local->tm_sec;	
 
 	time1 = time_init;
-	time_pac = time_init;
-	time_mon = time_init;
 
-	printf("inicio - %d\n", time_init);
+	//printf("inicio - %d\n", time_init);
+
+	//thread dos 30s
+	pthread_t time_thread;
+	pthread_create(&time_thread, NULL, thirty_reset, (void *)((pos_board**)input));
 
 	double aux_t = 0;
 	while(done){ 
 		struct tm * local1;
-		time_t t1 = time(NULL);
-		local1 = localtime(&t1);
+		time_t t = time(NULL);
+		local1 = localtime(&t);
 
 		time_aux = (local1 -> tm_min)*60 + local1->tm_sec;	
 
 		//passa 1s
-		if (time_aux-time1 >= 1) 
+	/*	if (time_aux-time1 >= 1) 
 		{
 			time1 = time_aux;
-			printf("Tempo - %d\n",time_aux);
+			//printf("Tempo - %d\n",time_aux);
 			count_p = 0;
 			count_m = 0;
 		}
-		//passa 30s
-		if (time_aux-time_pac >= 6) 
-		{
-			aux1 = pacman;
-			while (1){ 
-				py=rand()%(dim[1]-1);
-				px=rand()%(dim[0]-1);
-				if(((pos_board**)input)[py][px].object == ' ') break;
-			}
+	*/
 
-			aux1.x_next = px;
-			aux1.y_next = py;
-			aux1.x = pacman.x_next;
-			aux1.y = pacman.y_next;
-
-			pthread_mutex_lock(&board_mutex);
-	    	((pos_board**)input)[pacman.y_next][pacman.x_next] = clean;
-	    	((pos_board**)input)[aux1.y_next][aux1.x_next] = aux1;
-	    	pthread_mutex_unlock(&board_mutex);
-
-	    	for (int i = 0; i < n_player; ++i) send(comms[i], &aux1, sizeof (pos_board), 0);
-	    	pacman = aux1;
-	    	time_pac = time_aux;
-		}
-
-
-
+		//recebe jogada
 		if((err_rcv = recv(sock, &play , sizeof(pos_board), 0)) >0 ){
 			
 
@@ -338,6 +315,93 @@ void * comms_Thread(void * input){
 	}
 	return (NULL);
 }
+
+
+void * thirty_reset(void * input){	
+
+	int done = 1;
+	pthread_mutex_t board_mutex;
+	pos_board aux1;
+	int px, py;
+	pos_board clean;
+	clean.object = ' ';
+	pos_board pacman;
+	pos_board monster;
+	int sock = comms[n_player-1];   //isto nao da merda quando se eliminam jogadores?
+
+	for (int i = 0; i < dim[1]; ++i)
+	{
+		for (int j = 0; j < dim[0]; ++j)
+		{
+			if (((pos_board**)input)[i][j].sock_id == sock)
+			{
+				if (((pos_board**)input)[i][j].object=='M') monster = ((pos_board**)input)[i][j];
+				if (((pos_board**)input)[i][j].object=='P') pacman = ((pos_board**)input)[i][j];
+			}	
+		}
+	}
+
+	struct tm * local;
+	time_t t = time(NULL);
+	local = localtime(&t);
+
+	int time_aux;
+
+
+	int time_init = (local -> tm_min)*60 + local->tm_sec;	
+	time_pac = time_init;
+	time_mon = time_init;
+
+
+	printf("inicio - %d\n", time_init);
+
+	while(done){ 
+
+		struct tm * local;
+		time_t t = time(NULL);
+		local = localtime(&t);
+		time_aux = (local -> tm_min)*60 + local->tm_sec;	
+
+		//passam 30s
+		if (time_aux-time_pac >= 4) 
+		{
+			printf("Passaram 4s\n");
+			aux1 = pacman;
+			while (1){ 
+				py=rand()%(dim[1]-1);
+				px=rand()%(dim[0]-1);
+				if(((pos_board**)input)[py][px].object == ' ') break;
+			}
+			//pos vazia
+			aux1.x_next = px;
+			aux1.y_next = py;
+			printf("pos vazia: %d - %d  \n", px, py);
+			//pos antiga
+			aux1.x = pacman.x_next;
+			aux1.y = pacman.y_next;
+
+			pthread_mutex_lock(&board_mutex);
+	    	((pos_board**)input)[pacman.y_next][pacman.x_next] = clean;
+	    	((pos_board**)input)[aux1.y_next][aux1.x_next] = aux1;
+	    	pthread_mutex_unlock(&board_mutex);
+
+	    	for (int i = 0; i < n_player; ++i) send(comms[i], &aux1, sizeof (pos_board), 0);
+	    	pacman = aux1;
+	    	time_pac = time_aux;
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
 
 
 pos_board ** board_read() {
@@ -590,3 +654,4 @@ void send_board2(int client_sock, player_id* head){
 
 }
 */
+

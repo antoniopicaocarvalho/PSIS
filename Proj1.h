@@ -61,6 +61,8 @@ player_id * init_player (player_id * new_player, pos_board ** new_board, pid_t n
 void board_update (pos_board ** new_board, player_id  * new_player);
 
 void * comms_Thread(void * input);
+
+void * thirty_reset(void * input);
 /*
 player_id * list_player(player_id * new_player, player_id* head);
 
