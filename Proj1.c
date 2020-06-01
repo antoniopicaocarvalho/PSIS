@@ -209,14 +209,14 @@ void * comms_Thread(void * input){
 		time_aux = (local1 -> tm_min)*60 + local1->tm_sec;	
 
 		//passa 1s
-	/*	if (time_aux-time1 >= 1) 
+		if (time_aux-time1 >= 1) 
 		{
 			time1 = time_aux;
-			//printf("Tempo - %d\n",time_aux);
+			printf("Tempo - %d\n",time_aux);
 			count_p = 0;
 			count_m = 0;
 		}
-	*/
+	
 
 		//recebe jogada
 		if((err_rcv = recv(sock, &play , sizeof(pos_board), 0)) >0 ){
@@ -289,9 +289,6 @@ void * comms_Thread(void * input){
 
 				    	pthread_mutex_lock(&board_mutex);
 		    			((pos_board**)input)[play.y_next][play.x_next] = play;
-		    			pthread_mutex_unlock(&board_mutex);
-
-				    	pthread_mutex_lock(&board_mutex);
 		    			((pos_board**)input)[play.y][play.x] = clean;
 		    			pthread_mutex_unlock(&board_mutex);
 
@@ -302,7 +299,9 @@ void * comms_Thread(void * input){
 	    			
 	    		}
 	    		else{
-
+	    			//fica no mm sitio
+	    			if (play.object == 'P') time_pac = time_aux;
+	    			if (play.object == 'M') time_mon = time_aux;
 	    			aux2 = play;
 	    			aux2.x_next = play.x;
 	    			aux2.y_next = play.y;
@@ -357,15 +356,15 @@ void * thirty_reset(void * input){
 
 	while(done){ 
 
-		struct tm * local;
+		struct tm * local1;
 		time_t t = time(NULL);
-		local = localtime(&t);
-		time_aux = (local -> tm_min)*60 + local->tm_sec;	
+		local1 = localtime(&t);
+		time_aux = (local1 -> tm_min)*60 + local1->tm_sec;	
 
 		//passam 30s
-		if (time_aux-time_pac >= 4) 
+		if (time_aux-time_pac >= 6) 
 		{
-			printf("Passaram 4s\n");
+			printf("Passaram 6s\n");
 			aux1 = pacman;
 			while (1){ 
 				py=rand()%(dim[1]-1);
