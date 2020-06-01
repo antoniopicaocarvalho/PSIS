@@ -18,6 +18,7 @@ typedef struct pos_board{
 	int y_next;
 	int x;
 	int y; 
+	int time;
 }pos_board;
 
 
