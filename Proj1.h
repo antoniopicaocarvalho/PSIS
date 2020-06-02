@@ -64,6 +64,8 @@ void board_update (pos_board ** new_board, player_id  * new_player);
 void * comms_Thread(void * input);
 
 void * thirty_reset(void * input);
+
+void spawn_fruits (int n_player, pos_board ** new_board);
 /*
 player_id * list_player(player_id * new_player, player_id* head);
 

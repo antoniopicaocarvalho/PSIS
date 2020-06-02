@@ -272,6 +272,24 @@ void * sync_receiver(){
 			clear_place(msg1.x_next, msg1.y_next);
 		}
 
+		if (msg1.object == 'L'){
+			paint_lemon(msg1.x, msg1.y);
+		}
+		if (msg1.object == 'C'){
+			paint_cherry(msg1.x, msg1.y);
+		}
+
+		if (msg1.object == 'S'){
+    		if(msg1.x != -1) clear_place(msg1.x, msg1.y);
+			paint_powerpacman(msg1.x_next, msg1.y_next, msg1.r, msg1.g, msg1.b);
+
+			//guardar o pos_board deste jogador - monster
+			if(msg1.sock_id == sock_id) {
+				pac = msg1;
+			}
+
+		}
+
 	}
 
 
