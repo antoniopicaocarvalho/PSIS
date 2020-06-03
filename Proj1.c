@@ -178,6 +178,8 @@ void * comms_Thread(void * input){
 
 	pthread_mutex_t board_mutex;
 
+	int auxf;
+
 
 	//registar o instante em que foi criado o jogador
 	struct tm * local;
@@ -234,26 +236,26 @@ void * comms_Thread(void * input){
     		for (int i = 0; i < n_player; ++i) if (comms[i]!=sock) send(comms[i], &play, sizeof (pos_board), 0);  
     		pthread_mutex_unlock(&board_mutex);
     	}
-    	   	else if (play.object == 'Q'){
-    		pos_board cfruit;
-    		cfruit.object = 'Q';
-    		//pthread_mutex_lock(&board_mutex);
-    		((pos_board**)input)[play.y_next][play.x_next] = clean;
-    		//pthread_mutex_unlock(&board_mutex);
-    		done[k] = 1;
-    		n_player --;
-    		k=0;
+	   	else if (play.object == 'Q'){
+			pos_board cfruit;
+			cfruit.object = 'Q';
+			//pthread_mutex_lock(&board_mutex);
+			((pos_board**)input)[play.y_next][play.x_next] = clean;
+			//pthread_mutex_unlock(&board_mutex);
+			done[k] = 1;
+			n_player --;
+			k=0;
 
-    		//update comms array
-    		while (comms[k] != play.sock_id) k++;
-    		if (k!=n_player) comms[k] = comms[n_player];
+			//update comms array
+			while (comms[k] != play.sock_id) k++;
+			if (k!=n_player) comms[k] = comms[n_player];
 
-    		for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
+			for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
 
-    		//clean fruit
-    		if (n_player >= 1){
-    			int d=1;
-    			while(d){ 
+			//clean fruit
+			if (n_player >= 1){
+				int d=1;
+				while(d){ 
 	    			for (int i = 0; i < dim[1]; ++i){
 						for (int j = 0; j < dim[0]; ++j){
 							if (((pos_board**)input)[i][j].object=='L' || ((pos_board**)input)[i][j].object=='C'){
@@ -269,17 +271,16 @@ void * comms_Thread(void * input){
 							}
 						}
 	    			}
-    			}
-    		}	
+				}
+			}	
 
-    		pthread_mutex_unlock(&board_mutex);
-    		printf("\n-- Saiu um jogador (Total: %d) --\n", n_player);
+			pthread_mutex_unlock(&board_mutex);
+			printf("\n-- Saiu um jogador (Total: %d) --\n", n_player);
     	}
     	else{  
     		if ((countp[k] < 2 && play.object == 'P') || (countm[k] < 2 && play.object == 'M')||(countp[k] < 2 && play.object == 'S')){
-    			pos_board aux = ((pos_board**)input)[play.y_next][play.x_next];
+    			
     			play.time = time_aux;
-
 
     			if(play.object == 'P' || play.object == 'S'){
     				pacman = play;
@@ -290,159 +291,158 @@ void * comms_Thread(void * input){
     				monster = play;
     				countm[k] ++;
     			}
-
-
-    			//TROCA DE POSICOES
-    			if((aux.object == 'P' && play.object == 'P') || (aux.object == 'S' && play.object == 'P') ||
-    			   (aux.object == 'P' && play.object == 'S') || (aux.object == 'S' && play.object == 'S') ||
-    			   (aux.object == 'M' && play.object == 'M') || (aux.r == play.r && aux.g == play.g && aux.b == play.b)){
-    				
-    				printf(" - troca de pos -\n");
-    				
-    				//pthread_mutex_lock(&board_mutex);
-	    			
-	    			aux.x_next = play.x;
-					aux.y_next = play.y;
-					aux.x = play.x_next;
-					aux.y = play.y_next;
-					
-	    			((pos_board**)input)[play.y][play.x] = aux;
-	    			
-					for (int i = 0; i < n_player; ++i) send(comms[i], &aux, sizeof (pos_board), 0);
-
-					play.x = play.x_next;
-					play.y = play.y_next;
-
-	    			((pos_board**)input)[play.y_next][play.x_next] = play;
-
-			    	for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
-					pthread_mutex_unlock(&board_mutex);	
-		    	}
-		    	//FRUTA - PACMAN  E  FRUTA - SUPERPACMAN  
-		    	else if((aux.object == 'L' && play.object == 'P') || (aux.object == 'L' && play.object == 'S') ||
-    			(aux.object == 'C' && play.object == 'P') || (aux.object == 'C' && play.object == 'S')){
-
-		    		//pthread_mutex_lock(&board_mutex);
-		    		if(play.object == 'P') play.object = 'S';
-			    	else if(play.object == 'S') edies[k]=0;
-			    	
-			    	if (aux.object == 'L') fruit[k] = 1;
-	    			if (aux.object == 'C') fruit[k] = 2;
-			    	
-	    			((pos_board**)input)[play.y_next][play.x_next] = play;
-	    			
-			    	for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
-					pthread_mutex_unlock(&board_mutex);
-					printf(" - Fruta comida -\n");
-		    	}
-		    	//MONSTRO - PACMAN
-		    	else if((aux.object == 'M' && play.object == 'P') || (aux.object == 'P' && play.object == 'M')){
-
-		    		//pthread_mutex_lock(&board_mutex);
-		    		while (1){ 
-						py=rand()%(dim[1]-1);
-						px=rand()%(dim[0]-1);
-						if(((pos_board**)input)[py][px].object == ' ') break;
-					}
-					// PACMAN é comido pelo Monster
-					if (play.object == 'P')
-					{
-						play.x_next = px;
-						play.y_next = py;
-
-		    			((pos_board**)input)[play.y_next][play.x_next] = play;
-		    			((pos_board**)input)[play.y][play.x] = clean;
+    			if(play.x_next < dim[0] && play.y_next < dim[1] && play.x_next >= 0 && play.y_next >= 0 ){
+	    			pos_board aux = ((pos_board**)input)[play.y_next][play.x_next];
+	    			//TROCA DE POSICOES
+	    			if((aux.object == 'P' && play.object == 'P') || (aux.object == 'S' && play.object == 'P') ||
+	    			   (aux.object == 'P' && play.object == 'S') || (aux.object == 'S' && play.object == 'S') ||
+	    			   (aux.object == 'M' && play.object == 'M') || (aux.r == play.r && aux.g == play.g && aux.b == play.b)){
+	    				
+	    				printf(" - troca de pos -\n");
+	    				
+	    				//pthread_mutex_lock(&board_mutex);
 		    			
-						for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
-						pthread_mutex_unlock(&board_mutex);
-					}
-					// Monster come PACMAN
-					else{
+		    			aux.x_next = play.x;
+						aux.y_next = play.y;
+						aux.x = play.x_next;
+						aux.y = play.y_next;
+						
+		    			((pos_board**)input)[play.y][play.x] = aux;
+		    			
+						for (int i = 0; i < n_player; ++i) send(comms[i], &aux, sizeof (pos_board), 0);
 
-						aux.x = aux.x_next;
-						aux.y = aux.y_next;
-						aux.x_next = px;
-						aux.y_next = py;
-
-		    			((pos_board**)input)[aux.y_next][aux.x_next] = aux;
-		    			((pos_board**)input)[play.y][play.x] = clean;
-		    			((pos_board**)input)[play.y_next][play.x_next] = play;
-
-						for (int i = 0; i < n_player; ++i) {
-							send(comms[i], &aux, sizeof (pos_board), 0);
-							send(comms[i], &play, sizeof (pos_board), 0);
-						}
-						pthread_mutex_unlock(&board_mutex);
-					}
-					printf(" - Pacman comido -\n");
-		    	}
-		    	//MONSTRO - SUPERPACMAN
-		    	else if((aux.object == 'M' && play.object == 'S') || (aux.object == 'S' && play.object == 'M')){
-
-		    		//pthread_mutex_lock(&board_mutex);
-
-		    		edies[k]++;
-		    		printf("numero de monstros comidos - %d \n", edies[k]);
-
-		    		if (edies[k]==2){
-						if(play.object == 'S') play.object='P';
-						else if(aux.object == 'S') aux.object='P';
-						edies[k]=0;
-						printf(" - Super->Pacman -\n");
-					}
-
-		    		while (1){ 
-						py=rand()%(dim[1]-1);
-						px=rand()%(dim[0]-1);
-						if(((pos_board**)input)[py][px].object == ' ') break;
-					}
-
-					// Monstro é comido pelo SUPERPACMAN
-					if (play.object == 'M'){
-						play.x_next = px;
-						play.y_next = py;
+						play.x = play.x_next;
+						play.y = play.y_next;
 
 		    			((pos_board**)input)[play.y_next][play.x_next] = play;
-		    			((pos_board**)input)[play.y][play.x] = clean;
 
-						for (int i = 0; i < n_player; ++i) {
-							send(comms[i], &aux, sizeof (pos_board), 0);
-							send(comms[i], &play, sizeof (pos_board), 0);
-						}
-						pthread_mutex_unlock(&board_mutex);
-					}
-					// SUPERPACMAN come Monstro
-					else{
+				    	for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
+						pthread_mutex_unlock(&board_mutex);	
+			    	}
+			    	//FRUTA - PACMAN  E  FRUTA - SUPERPACMAN  
+			    	else if((aux.object == 'L' && play.object == 'P') || (aux.object == 'L' && play.object == 'S') ||
+	    			(aux.object == 'C' && play.object == 'P') || (aux.object == 'C' && play.object == 'S')){
 
-						aux.x = aux.x_next;
-						aux.y = aux.y_next;
-						aux.x_next = px;
-						aux.y_next = py;
-
-		    			((pos_board**)input)[aux.y_next][aux.x_next] = aux;
-		    			((pos_board**)input)[play.y][play.x] = clean;
+			    		//pthread_mutex_lock(&board_mutex);
+			    		if(play.object == 'P') play.object = 'S';
+				    	else if(play.object == 'S') edies[k]=0;
+				    	
+				    	if (aux.object == 'L') fruit[k] = 1;
+		    			if (aux.object == 'C') fruit[k] = 2;
+				    	
 		    			((pos_board**)input)[play.y_next][play.x_next] = play;
-
-						for (int i = 0; i < n_player; ++i) {
-							send(comms[i], &aux, sizeof (pos_board), 0);
-							send(comms[i], &play, sizeof (pos_board), 0);
-						}
+		    			
+				    	for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
 						pthread_mutex_unlock(&board_mutex);
+						printf(" - Fruta comida -\n");
+			    	}
+			    	//MONSTRO - PACMAN
+			    	else if((aux.object == 'M' && play.object == 'P') || (aux.object == 'P' && play.object == 'M')){
+
+			    		//pthread_mutex_lock(&board_mutex);
+			    		while (1){ 
+							py=rand()%(dim[1]-1);
+							px=rand()%(dim[0]-1);
+							if(((pos_board**)input)[py][px].object == ' ') break;
+						}
+						// PACMAN é comido pelo Monster
+						if (play.object == 'P')
+						{
+							play.x_next = px;
+							play.y_next = py;
+
+			    			((pos_board**)input)[play.y_next][play.x_next] = play;
+			    			((pos_board**)input)[play.y][play.x] = clean;
+			    			
+							for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
+							pthread_mutex_unlock(&board_mutex);
+						}
+						// Monster come PACMAN
+						else{
+
+							aux.x = aux.x_next;
+							aux.y = aux.y_next;
+							aux.x_next = px;
+							aux.y_next = py;
+
+			    			((pos_board**)input)[aux.y_next][aux.x_next] = aux;
+			    			((pos_board**)input)[play.y][play.x] = clean;
+			    			((pos_board**)input)[play.y_next][play.x_next] = play;
+
+							for (int i = 0; i < n_player; ++i) {
+								send(comms[i], &aux, sizeof (pos_board), 0);
+								send(comms[i], &play, sizeof (pos_board), 0);
+							}
+							pthread_mutex_unlock(&board_mutex);
+						}
+						printf(" - Pacman comido -\n");
+			    	}
+			    	//MONSTRO - SUPERPACMAN
+			    	else if((aux.object == 'M' && play.object == 'S') || (aux.object == 'S' && play.object == 'M')){
+
+			    		//pthread_mutex_lock(&board_mutex);
+
+			    		edies[k]++;
+			    		printf("numero de monstros comidos - %d \n", edies[k]);
+
+			    		if (edies[k]==2){
+							if(play.object == 'S') play.object='P';
+							else if(aux.object == 'S') aux.object='P';
+							edies[k]=0;
+							printf(" - Super->Pacman -\n");
+						}
+
+			    		while (1){ 
+							py=rand()%(dim[1]-1);
+							px=rand()%(dim[0]-1);
+							if(((pos_board**)input)[py][px].object == ' ') break;
+						}
+
+						// Monstro é comido pelo SUPERPACMAN
+						if (play.object == 'M'){
+							play.x_next = px;
+							play.y_next = py;
+
+			    			((pos_board**)input)[play.y_next][play.x_next] = play;
+			    			((pos_board**)input)[play.y][play.x] = clean;
+
+							for (int i = 0; i < n_player; ++i) {
+								send(comms[i], &aux, sizeof (pos_board), 0);
+								send(comms[i], &play, sizeof (pos_board), 0);
+							}
+							pthread_mutex_unlock(&board_mutex);
+						}
+						// SUPERPACMAN come Monstro
+						else{
+
+							aux.x = aux.x_next;
+							aux.y = aux.y_next;
+							aux.x_next = px;
+							aux.y_next = py;
+
+			    			((pos_board**)input)[aux.y_next][aux.x_next] = aux;
+			    			((pos_board**)input)[play.y][play.x] = clean;
+			    			((pos_board**)input)[play.y_next][play.x_next] = play;
+
+							for (int i = 0; i < n_player; ++i) {
+								send(comms[i], &aux, sizeof (pos_board), 0);
+								send(comms[i], &play, sizeof (pos_board), 0);
+							}
+							pthread_mutex_unlock(&board_mutex);
+						}
+						printf(" - Monstro comido -\n");
 					}
-					printf(" - Monstro comido -\n");
-				}
-				//JOGADA SEM INTERACOES
-		    	else{
 
-
-		    		if(aux.object == 'B' || play.x_next > dim[0]-1 || play.y_next > dim[1]-1 || play.x_next < 0 || play.y_next < 0 ){
+					else if (aux.object == 'B'){
+						printf("BOUNCE\n");
 						//Bounce back
 						int n_x = 2*play.x - play.x_next;
 						int n_y = 2*play.y - play.y_next;
 						//Caso o Bounce back seja para dentro da board
 						if ( (n_x < dim[0]) && (n_y < dim[1]) && (n_x >= 0) && (n_y >= 0) ){
 							//pode fazer o bounce back
-							if (((pos_board**)input)[n_y][n_x] == ' '){
+							
+							if (((pos_board**)input)[n_y][n_x].object == ' '){
 								
 								play.x_next = n_x;
 								play.y_next = n_y;
@@ -466,17 +466,62 @@ void * comms_Thread(void * input){
 							play.y_next = play.y;
 
 							for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
-							}
+						}
 
 					}
+
 					//Pode avancar
-					if (((pos_board**)input)[play.y_next][play.x_next] == ' '){
-						
+					else //if (((pos_board**)input)[play.y_next][play.x_next].object == ' ')
+					{ 	printf("COCO\n");
 						((pos_board**)input)[play.y_next][play.x_next] = play;
 	    				((pos_board**)input)[play.y][play.x] = clean;
 
 	    				for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
 					}
+
+			    	//Jogada Realizada
+					printf("move to: %d-%d\n", play.x_next, play.y_next);
+					pthread_mutex_unlock(&board_mutex);
+				}
+
+				//QUANDO QUER SAIR DA BOARD
+		    	else{
+
+					printf("BOUNCE\n");
+					//Bounce back
+					int n_x = 2*play.x - play.x_next;
+					int n_y = 2*play.y - play.y_next;
+					//Caso o Bounce back seja para dentro da board
+					if ( (n_x < dim[0]) && (n_y < dim[1]) && (n_x >= 0) && (n_y >= 0) ){
+						//pode fazer o bounce back
+						
+						if (((pos_board**)input)[n_y][n_x].object == ' '){
+							
+							play.x_next = n_x;
+							play.y_next = n_y;
+
+							((pos_board**)input)[n_y][n_x] = play;
+							((pos_board**)input)[play.y][play.x] = clean;
+
+							for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
+						}
+						//esta preso
+						else{
+
+							play.x_next = play.x;
+							play.y_next = play.y;
+
+							for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
+						}
+					}
+					else{	
+						play.x_next = play.x;
+						play.y_next = play.y;
+
+						for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
+					}
+
+					
 
 			    	//Jogada Realizada
 					printf("move to: %d-%d\n", play.x_next, play.y_next);
@@ -741,8 +786,8 @@ void spawn_fruits (int n_player, pos_board ** new_board){
 		new_board[y][x].y = y;
 		aux_1 = new_board[y][x];
 		while (1){ 
-			aux1=rand()%(dim[1]-1);
-			aux2=rand()%(dim[0]-1);
+			y=rand()%(dim[1]-1);
+			x=rand()%(dim[0]-1);
 			if(new_board[y][x].object == ' ') break;
 		}
 		new_board[y][x].object = 'C';

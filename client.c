@@ -180,10 +180,10 @@ int main(int argc, char * argv[]){
 					jogada_m.g = mon.g;
 					jogada_m.b = mon.b;
 
-					jogada_p.x = x_mon;
-					jogada_p.y = y_mon;
-					jogada_p.x_next = x_new_m;
-					jogada_p.y_next = y_new_m;
+					jogada_m.x = x_mon;
+					jogada_m.y = y_mon;
+					jogada_m.x_next = x_new_m;
+					jogada_m.y_next = y_new_m;
 
 					send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
 				}
@@ -203,10 +203,10 @@ int main(int argc, char * argv[]){
 					jogada_m.g = mon.g;
 					jogada_m.b = mon.b;
 
-					jogada_p.x = x_mon;
-					jogada_p.y = y_mon;
-					jogada_p.x_next = x_new_m;
-					jogada_p.y_next = y_new_m;
+					jogada_m.x = x_mon;
+					jogada_m.y = y_mon;
+					jogada_m.x_next = x_new_m;
+					jogada_m.y_next = y_new_m;
 
 					send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
 				}
@@ -226,11 +226,11 @@ int main(int argc, char * argv[]){
 					jogada_m.g = mon.g;
 					jogada_m.b = mon.b;
 
-					jogada_p.x = x_mon;
-					jogada_p.y = y_mon;
-					jogada_p.x_next = x_new_m;
-					jogada_p.y_next = y_new_m;
-
+					jogada_m.x = x_mon;
+					jogada_m.y = y_mon;
+					jogada_m.x_next = x_new_m;
+					jogada_m.y_next = y_new_m;
+					
 					send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
 				}
 				if (event.key.keysym.sym == SDLK_DOWN ){
@@ -249,10 +249,10 @@ int main(int argc, char * argv[]){
 					jogada_m.g = mon.g;
 					jogada_m.b = mon.b;
 
-					jogada_p.x = x_mon;
-					jogada_p.y = y_mon;
-					jogada_p.x_next = x_new_m;
-					jogada_p.y_next = y_new_m;
+					jogada_m.x = x_mon;
+					jogada_m.y = y_mon;
+					jogada_m.x_next = x_new_m;
+					jogada_m.y_next = y_new_m;
 
 					send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
 				}
