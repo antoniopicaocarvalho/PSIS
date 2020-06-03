@@ -295,12 +295,10 @@ void * comms_Thread(void * input){
     			(aux.object == 'C' && play.object == 'P') || (aux.object == 'C' && play.object == 'S')){
 
 		    		//pthread_mutex_lock(&board_mutex);
-		    		if(play.object == 'P'){
-		    			play.object = 'S';
-	    				if (aux.object == 'L') fruit[k] = 1;
-	    				if (aux.object == 'C') fruit[k] = 2;
-		    		}	
-			    	else if(play.object == 'S') edies[k]=0;;
+		    		if(play.object == 'P') play.object = 'S';
+			    	else if(play.object == 'S') edies[k]=0;
+			    	if (aux.object == 'L') fruit[k] = 1;
+	    			if (aux.object == 'C') fruit[k] = 2;
 			    	
 	    			((pos_board**)input)[play.y_next][play.x_next] = play;
 	    			
