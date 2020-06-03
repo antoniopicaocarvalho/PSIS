@@ -234,20 +234,44 @@ void * comms_Thread(void * input){
     		for (int i = 0; i < n_player; ++i) if (comms[i]!=sock) send(comms[i], &play, sizeof (pos_board), 0);  
     		pthread_mutex_unlock(&board_mutex);
     	}
-    	else if (play.object == 'Q'){
+    	   	else if (play.object == 'Q'){
+    		pos_board cfruit;
+    		cfruit.object = 'Q';
     		//pthread_mutex_lock(&board_mutex);
     		((pos_board**)input)[play.y_next][play.x_next] = clean;
     		//pthread_mutex_unlock(&board_mutex);
     		done[k] = 1;
-
-
-
-
     		n_player --;
     		k=0;
+
+    		//update comms array
     		while (comms[k] != play.sock_id) k++;
     		if (k!=n_player) comms[k] = comms[n_player];
+
     		for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
+
+    		//clean fruit
+    		if (n_player >= 1){
+    			int d=1;
+    			while(d){ 
+	    			for (int i = 0; i < dim[1]; ++i){
+						for (int j = 0; j < dim[0]; ++j){
+							if (((pos_board**)input)[i][j].object=='L' || ((pos_board**)input)[i][j].object=='C'){
+								if(auxf <2){
+									((pos_board**)input)[i][j] = clean;
+									cfruit.x_next = j;
+									cfruit.y_next = i;
+									auxf++;
+									for (int n = 0; n < n_player; ++n) send(comms[n], &cfruit, sizeof (pos_board), 0);  
+									printf("AUX F %d\n", auxf);
+								}
+								if(auxf == 2) d=0;
+							}
+						}
+	    			}
+    			}
+    		}	
+
     		pthread_mutex_unlock(&board_mutex);
     		printf("\n-- Saiu um jogador (Total: %d) --\n", n_player);
     	}
