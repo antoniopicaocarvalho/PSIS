@@ -267,7 +267,7 @@ void * comms_Thread(void * input){
 									for (int n = 0; n < n_player; ++n) send(comms[n], &cfruit, sizeof (pos_board), 0);  
 									printf("AUX F %d\n", auxf);
 								}
-								if(auxf == 2) d=0;
+								else if(auxf == 2) d=0;
 							}
 						}
 	    			}
@@ -291,6 +291,7 @@ void * comms_Thread(void * input){
     				monster = play;
     				countm[k] ++;
     			}
+
     			if(play.x_next < dim[0] && play.y_next < dim[1] && play.x_next >= 0 && play.y_next >= 0 ){
 	    			pos_board aux = ((pos_board**)input)[play.y_next][play.x_next];
 	    			//TROCA DE POSICOES
@@ -432,7 +433,7 @@ void * comms_Thread(void * input){
 						}
 						printf(" - Monstro comido -\n");
 					}
-
+					//Brick
 					else if (aux.object == 'B'){
 						printf("BOUNCE\n");
 						//Bounce back
@@ -467,12 +468,10 @@ void * comms_Thread(void * input){
 
 							for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
 						}
-
 					}
-
 					//Pode avancar
-					else //if (((pos_board**)input)[play.y_next][play.x_next].object == ' ')
-					{ 	printf("COCO\n");
+					else{ 	
+						printf("COCO\n");
 						((pos_board**)input)[play.y_next][play.x_next] = play;
 	    				((pos_board**)input)[play.y][play.x] = clean;
 
@@ -483,7 +482,6 @@ void * comms_Thread(void * input){
 					printf("move to: %d-%d\n", play.x_next, play.y_next);
 					pthread_mutex_unlock(&board_mutex);
 				}
-
 				//QUANDO QUER SAIR DA BOARD
 		    	else{
 
