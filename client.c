@@ -87,7 +87,7 @@ int main(int argc, char * argv[]){
 	while(flag1+flag2<2){ }
 
 
-	/*play *event_data;
+/*	play *event_data;
 	SDL_Event new_event;
 	
 	event_data = malloc(sizeof(play));
@@ -97,7 +97,8 @@ int main(int argc, char * argv[]){
 	new_event.type = Event_ShowCharacter;
 	new_event.user.data1 = event_data;
 
-	SDL_PushEvent(&new_event);*/
+	SDL_PushEvent(&new_event);
+*/
 
 	int done = 0;
 	int npos[4];
@@ -125,15 +126,15 @@ int main(int argc, char * argv[]){
 
 			//when the mouse mooves the pacman also moves
 			if(event.type == SDL_MOUSEMOTION){
-				//next pos
-				x_new = pac.x_next;
-				y_new = pac.y_next;
+
+				pos_board jogada_p;
+
 				//prev pos
 				x_pac = pac.x_next;
 				y_pac = pac.y_next;
 
 				//this function return the place where the mouse cursor is
-				get_board_place(event.motion .x, event.motion .y,&x_new, &y_new);
+				get_board_place(event.motion.x, event.motion.y, &x_new, &y_new);
 
 				//Rato tem de ser adjacente a posicao anterior
 				if( ((x_new - x_pac == 1) && (y_new - y_pac == 0)) || 
@@ -141,19 +142,27 @@ int main(int argc, char * argv[]){
 					((x_new - x_pac == 0) && (y_new - y_pac == 1)) || 
 					((x_new - x_pac == 0) && (y_new - y_pac == -1)) ){
 
-					pos_board jogada_p = check_new_pos(x_new, y_new, x_pac, y_pac, board, dim);
+					//pos_board jogada_p = check_new_pos(x_new, y_new, x_pac, y_pac, board, dim);
 					
 					jogada_p.object = pac.object;
 					jogada_p.sock_id = pac.sock_id;
+
 					jogada_p.r = pac.r;
 					jogada_p.g = pac.g;
 					jogada_p.b = pac.b;
-					
-					send(sock_fd, &jogada_p, sizeof(jogada_p), 0);
+
+					jogada_p.x = x_pac;
+					jogada_p.y = y_pac;
+					jogada_p.x_next = x_new;
+					jogada_p.y_next = y_new;
+
+					send(sock_fd, &jogada_p, sizeof(pos_board), 0);
 				}
 			}
 			//Setas
 			if(event.type == SDL_KEYDOWN){
+
+				pos_board jogada_m;
 
 				if (event.key.keysym.sym == SDLK_LEFT ){
 
@@ -162,13 +171,19 @@ int main(int argc, char * argv[]){
 					x_mon = mon.x_next;
 					y_mon = mon.y_next;
 
-					pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
+					//pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
 
 					jogada_m.object = mon.object;
 					jogada_m.sock_id = mon.sock_id;
+
 					jogada_m.r = mon.r;
 					jogada_m.g = mon.g;
-					jogada_m.b = mon.b;;
+					jogada_m.b = mon.b;
+
+					jogada_p.x = x_mon;
+					jogada_p.y = y_mon;
+					jogada_p.x_next = x_new_m;
+					jogada_p.y_next = y_new_m;
 
 					send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
 				}
@@ -179,13 +194,19 @@ int main(int argc, char * argv[]){
 					x_mon = mon.x_next;
 					y_mon = mon.y_next;
 
-					pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
+					//pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
 
 					jogada_m.object = mon.object;
 					jogada_m.sock_id = mon.sock_id;
+
 					jogada_m.r = mon.r;
 					jogada_m.g = mon.g;
-					jogada_m.b = mon.b;;
+					jogada_m.b = mon.b;
+
+					jogada_p.x = x_mon;
+					jogada_p.y = y_mon;
+					jogada_p.x_next = x_new_m;
+					jogada_p.y_next = y_new_m;
 
 					send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
 				}
@@ -196,13 +217,19 @@ int main(int argc, char * argv[]){
 					x_mon = mon.x_next;
 					y_mon = mon.y_next;
 
-					pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
+					//pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
 
 					jogada_m.object = mon.object;
 					jogada_m.sock_id = mon.sock_id;
+
 					jogada_m.r = mon.r;
 					jogada_m.g = mon.g;
-					jogada_m.b = mon.b;;
+					jogada_m.b = mon.b;
+
+					jogada_p.x = x_mon;
+					jogada_p.y = y_mon;
+					jogada_p.x_next = x_new_m;
+					jogada_p.y_next = y_new_m;
 
 					send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
 				}
@@ -213,13 +240,19 @@ int main(int argc, char * argv[]){
 					x_mon = mon.x_next;
 					y_mon = mon.y_next;
 
-					pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
+					//pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
 
 					jogada_m.object = mon.object;
 					jogada_m.sock_id = mon.sock_id;
+
 					jogada_m.r = mon.r;
 					jogada_m.g = mon.g;
-					jogada_m.b = mon.b;;
+					jogada_m.b = mon.b;
+
+					jogada_p.x = x_mon;
+					jogada_p.y = y_mon;
+					jogada_p.x_next = x_new_m;
+					jogada_p.y_next = y_new_m;
 
 					send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
 				}
@@ -238,17 +271,17 @@ int main(int argc, char * argv[]){
 
 void * sync_receiver(){
 
-	
-
 	pos_board msg1;
 	int err_rcv;
 
 	while(err_rcv = recv(sock_fd, &msg1, sizeof(pos_board), 0)>0){
-    	if (msg1.object == 'P'){
+    	if (msg1.object == 'P' || msg1.object == 'S'){
 			
     		if(msg1.x != -1) clear_place(msg1.x, msg1.y);
-			paint_pacman(msg1.x_next, msg1.y_next, msg1.r, msg1.g, msg1.b);
 			
+			if(msg1.object == 'P') paint_pacman(msg1.x_next, msg1.y_next, msg1.r, msg1.g, msg1.b);
+			if(msg1.object == 'S') paint_powerpacman(msg1.x_next, msg1.y_next, msg1.r, msg1.g, msg1.b);
+
 			//guardar o pos_board deste jogador - pacman
 			if(msg1.sock_id == sock_id){  
 				pac = msg1;
@@ -265,7 +298,6 @@ void * sync_receiver(){
 				mon = msg1;
 				flag2 = 1;
 			}
-
 		}
 		if (msg1.object == 'q' || msg1.object == 'Q')
 		{
@@ -279,17 +311,6 @@ void * sync_receiver(){
 			paint_cherry(msg1.x, msg1.y);
 		}
 
-		if (msg1.object == 'S'){
-    		if(msg1.x != -1) clear_place(msg1.x, msg1.y);
-			paint_powerpacman(msg1.x_next, msg1.y_next, msg1.r, msg1.g, msg1.b);
-
-			//guardar o pos_board deste jogador - monster
-			if(msg1.sock_id == sock_id) {
-				pac = msg1;
-			}
-
-		}
-
 	}
 
 
@@ -298,7 +319,7 @@ void * sync_receiver(){
 }
 
 
-
+/*
 pos_board check_new_pos(int x_next, int y_next, int x, int y, char ** board, int dim[2]){
 
 	pos_board next_move;
@@ -344,3 +365,4 @@ pos_board check_new_pos(int x_next, int y_next, int x, int y, char ** board, int
 
 	//printf("AQUI");
 }
+*/
