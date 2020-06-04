@@ -1,146 +1,14 @@
-#include "UI_library.h"
-#include "sock_init.h"
-#include <sys/types.h>
-#include <unistd.h>
-#include <pthread.h>
 #include "Proj1.h"
 
-Uint32 Event_ShowCharacter;
+pos_board pac;
+pos_board mon;
 
-/*void* paint_places (void *arg){
-
-	int *dim_board=(int*) arg;
-	create_board_window(300, 300, *dim_board);
-	int done=0;
-	play_response resp;
-	while(!done){
-		read(sock_fd, &resp, sizeof(struct play_response)); 
-		printf("Resposta do programa:\nCode:%d\nCoordenadas:(%d,%d)\nConteúdo da casa: %s\n", resp.code, resp.play1[0], resp.play1[1], resp.str_play1);
-		printf("Conecção com o proprio jogador[0] com os outros[1]: %d\n", resp.sock);
-		if(resp.sock==0){
-			switch (resp.code) {
-				case 1: 
-					paint_card(resp.play1[0], resp.play1[1], 212, 212, 212);
-					write_card(resp.play1[0], resp.play1[1], resp.str_play1, 100, 100, 100);
-					break;
-				case 3:
-					paint_card(resp.play1[0], resp.play1[1], resp.rgb[0], resp.rgb[1], resp.rgb[2]);
-					write_card(resp.play1[0], resp.play1[1], resp.str_play1, 255, 255, 255);
-						
-					paint_card(resp.play2[0], resp.play2[1], resp.rgb[0], resp.rgb[1], resp.rgb[2]);
-					write_card(resp.play2[0], resp.play2[1], resp.str_play2, 255, 255, 255);
-				 	break;
-				case 2:	
-					paint_card(resp.play1[0], resp.play1[1], resp.rgb[0], resp.rgb[1], resp.rgb[2]);
-					write_card(resp.play1[0], resp.play1[1], resp.str_play1, 255, 255, 255);
-						
-					paint_card(resp.play2[0], resp.play2[1], resp.rgb[0], resp.rgb[1], resp.rgb[2]);
-					write_card(resp.play2[0], resp.play2[1], resp.str_play2, 255, 255, 255);
-					break;
-				case -2: 
-					paint_card(resp.play1[0], resp.play1[1], 212, 212, 212);
-					write_card(resp.play1[0], resp.play1[1], resp.str_play1, 100, 100, 100);
-							
-					paint_card(resp.play2[0], resp.play2[1], 212, 212, 212);
-					write_card(resp.play2[0], resp.play2[1], resp.str_play2, 100, 100, 100);
-							
-					sleep(2);
-
-					clear_card(resp.play1[0], resp.play1[1]);
-					clear_card(resp.play2[0], resp.play2[1]);
-					break;
-			}
-		}else if(resp.sock==1){
-			switch (resp.code) {
-				case 1:
-					paint_card(resp.play1[0], resp.play1[1], 100, 100, 100);
-					paint_limit_card(resp.play1[0], resp.play1[1], resp.rgb[0], resp.rgb[1], resp.rgb[2]);
-					write_card(resp.play1[0], resp.play1[1], resp.str_play1, resp.rgb[0], resp.rgb[1], resp.rgb[2]);
-					break;
-				case 3: 
-					paint_card(resp.play1[0], resp.play1[1], resp.rgb[0], resp.rgb[1], resp.rgb[2]);
-					write_card(resp.play1[0], resp.play1[1], resp.str_play1, 255, 255, 255);
-					
-					paint_card(resp.play2[0], resp.play2[1], resp.rgb[0], resp.rgb[1], resp.rgb[2]);
-					write_card(resp.play2[0], resp.play2[1], resp.str_play2, 255, 255, 255);
-					break;
-				case 2:	
-					paint_card(resp.play1[0], resp.play1[1], resp.rgb[0], resp.rgb[1], resp.rgb[2]);
-					write_card(resp.play1[0], resp.play1[1], resp.str_play1, 255, 255, 255);
-					
-					paint_card(resp.play2[0], resp.play2[1], resp.rgb[0], resp.rgb[1], resp.rgb[2]);
-					write_card(resp.play2[0], resp.play2[1], resp.str_play2, 255, 255, 255);
-					break;
-				case -2: 
-					paint_card(resp.play1[0], resp.play1[1] , 100, 100, 100);
-					paint_limit_card(resp.play1[0], resp.play1[1], resp.rgb[0], resp.rgb[1], resp.rgb[2]);
-					write_card(resp.play1[0], resp.play1[1], resp.str_play1,resp.rgb[0], resp.rgb[1], resp.rgb[2]);
-					
-					paint_card(resp.play2[0], resp.play2[1] , 100, 100, 100);
-					paint_limit_card(resp.play2[0], resp.play2[1], resp.rgb[0], resp.rgb[1], resp.rgb[2]);
-					write_card(resp.play2[0], resp.play2[1], resp.str_play2,resp.rgb[0], resp.rgb[1], resp.rgb[2]);
-					
-					sleep(1);
-					
-					clear_card(resp.play1[0], resp.play1[1]);
-					clear_card(resp.play2[0], resp.play2[1]);
-					break;
-				case -1:
-					clear_card(resp.play1[0], resp.play1[1]);
-			}
-		}else if(resp.sock=2){
-			printf("--------<Game_Stats>-----------\n\n");
-			if(resp.place==1){
-				printf("You are the Winner, Congrats, mah friend!!\n");
-			}
-			printf("You made %d pairs, Place: %d\n\n", resp.n_pairs, resp.place);
-			printf("--------<New_Game>-----------\n\n");
-
-			for(int i=0; i<*dim_board; i++){
-				for(int j=0; j<*dim_board; j++){
-					clear_card(i,j);
-				}
-			}
-		}
-	}
-	
-	pthread_exit(NULL);
-	close_board_windows();
-}
-
-
-void * clientThread(void* argc){
-
-	ex4_message msg;
-	ex4_message *event_data;
-	SDL_Event new_event;
-	int err_rcv; 
-
-	printf("just connected to the server\n");
-
-	while((err_rcv = recv(sock_fd, &msg, sizeof(msg), 0))>0){
-
-		printf("received %d bytes %d %d %d \n", err_rcv,  msg.character, msg.x, msg.y);
-
-			event_data = malloc(sizeof(ex4_message));
-			*event_data = msg;
-
-			SDL_zero(new_event);
-			new_event.type = Event_ShowCharacter;
-			new_event.user.data1 = event_data;
-
-			SDL_PushEvent(&new_event);
-
-	}
-
-	return(NULL);
-}*/
-
+int sock_fd, sock_id, flag1, flag2;
 
 int main(int argc, char * argv[]){
 
-    if (argc <2){//-----------------------------------------------------------------------falta o adress do server
-      printf("second argument should be server address\n");
+    if (argc <5){
+      printf("2º argument should be server address, 3º-5º should be RGB\n");
       exit(-1);}
 
     SDL_Event event;
@@ -149,93 +17,64 @@ int main(int argc, char * argv[]){
 	inet_aton(argv[1], &server_addr.sin_addr);
 	sock_fd = connect_server (sock_fd, server_addr);
 
-	int rgb[3];
 	int msg[2];
-	int err_rcv;
-	int dim[2];
+
+	int bricks;
 
 	pid_t npid = getpid();
 	printf("o meu pid é %d \n", npid);
 	
-
-
-
-	int n_bricks = 0;
-	board_info new_board;
 	char ** board;
-	int i, j;
+
+	int err_rcv;
+
+	colour c_colour;
+
+	c_colour.r = atoi(argv[2]);
+	c_colour.g = atoi(argv[3]);
+	c_colour.b = atoi(argv[4]);
+
+
+	printf("COR - %d, %d, %d\n",c_colour.r, c_colour.g, c_colour.b);
+
+
+	send(sock_fd, &c_colour, sizeof(colour), 0);
+
 	//Recebe linhas e colunas
 	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
-		
-		dim[0] = msg[0];
-		dim[1] = msg[1];
 		create_board_window(msg[0],msg[1]);
 		printf("Board criada!!!\n"); 
-		new_board.lines = msg[0];
-		new_board.cols = msg[1];
-	}
-	
-	board = malloc(sizeof(char *) * (msg[0]));           
-	for ( i = 0 ; i < msg[0]; i++){
-		board[i] = malloc (sizeof(char) * (msg[1]));
-		for (j = 0; j < msg[1]; j++){
-			board[i][j] = ' ';
-		}
-		//board[i][j] = '\0';
 	}
 
 	//Recebe numero de Bricks
-	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
-		printf("Há %d Bricks!!!\n",msg[0]); 
-		new_board.bricks = msg[0];
-	}
+	if(err_rcv = recv(sock_fd, &bricks, sizeof(int), 0)>0) printf("Há %d Bricks!!!\n",bricks); 
+	
+
 	//Pinta os Bricks
-	for(int i = 0; i < new_board.bricks ; i++){
+	for(int i = 0; i < bricks ; i++){
 		if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
 			paint_brick(msg[0],msg[1]);
-			board[msg[0]][msg[1]] = 'B';
 		}
 	}
-	new_board.board = board;
-	printf("Board Concluida\n");
 
+	printf("Board Concluida\n\n");
 
-
+	if(err_rcv = recv(sock_fd, &sock_id, sizeof(int), 0)>0) {};
 
 	send(sock_fd, &npid, sizeof(npid), 0);
 
-	printf(" sock_id do lado do cliente - %d\n", sock_fd);
-
-	//pthread_t thread_id;
-	//pthread_create(&thread_id, NULL, sync_receiver, NULL);
+	pthread_t thread_id;
+	pthread_create(&thread_id, NULL, sync_receiver, NULL);
 	//send(sock_fd, &thread_id, sizeof(thread_id), 0);
 
-	//Recebe cor
-	if(err_rcv = recv(sock_fd, &rgb, sizeof(rgb), 0)>0) printf("recebeu cor ou caraças %d %d %d\n", rgb[1], rgb[2], rgb[0]);
-	
-	//Recebe pos_pacman e pinta
-	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_pacman(msg[0],msg[1], rgb[0], rgb[1], rgb[2]);
+	flag1 = 0;
+    flag2 = 0;
 
-	int init_pacman[2];
-	init_pacman[0] = msg[0];
-	init_pacman[1] = msg[1];
-
-	//Recebe pos_monster e pinta
-	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_monster(msg[0],msg[1], rgb[0], rgb[1], rgb[2]);	
-
-	int init_monster[2];
-	init_monster[0] = msg[0];
-	init_monster[1] = msg[1];
+	//waiting for window to be created
+	while(flag1+flag2<2){ }
 
 
-	/*PREPARAR PARA JOGAR*/
-	int x_pac = init_pacman[0];
-	int y_pac = init_pacman[1];
-	int x_mon = init_monster[0];
-	int y_mon = init_monster[1];
-
-	play jogada;
-	play *event_data;
+/*	play *event_data;
 	SDL_Event new_event;
 	
 	event_data = malloc(sizeof(play));
@@ -246,39 +85,43 @@ int main(int argc, char * argv[]){
 	new_event.user.data1 = event_data;
 
 	SDL_PushEvent(&new_event);
+*/
 
 	int done = 0;
-	int npos[4];
 
+
+	pac.x = pac.x_next;
+	pac.y = pac.y_next;
+	mon.x = mon.x_next;
+	mon.y = mon.y_next;
+
+	//printf("pos %d - %d \n", pac.x, pac.y);
+
+	int x_new, y_new, x_pac, y_pac, x_new_m, y_new_m, x_mon, y_mon;
+	
 
 	while (!done){
 		while (SDL_PollEvent(&event)) {
-			if(event.type == SDL_QUIT) 
+			if(event.type == SDL_QUIT) {
+				mon.object = 'q';
+				pac.object = 'Q';
+				send(sock_fd, &mon, sizeof(pos_board), 0);
+				send(sock_fd, &pac, sizeof(pos_board), 0);
+
 				done = SDL_TRUE;
-			
-			/*if(event.type == Event_ShowCharacter) {
-
-				play * data_ptr;
-				data_ptr = event.user.data1;
-
-				clear_place(x_other,y_other);
-
-				x_other = data_ptr->x;
-				y_other = data_ptr->y;
-
-				paint_pacman(x_other, y_other, rgb[0], rgb[1], rgb[2]);
-				printf("new event received\n");
-			}*/
+			}
 
 			//when the mouse mooves the pacman also moves
 			if(event.type == SDL_MOUSEMOTION){
-				int x_new = init_pacman[0];
-				int y_new = init_pacman[1];
-				//int new_pos[2];
+
+				pos_board jogada_p;
+
+				//prev pos
+				x_pac = pac.x_next;
+				y_pac = pac.y_next;
 
 				//this function return the place where the mouse cursor is
-				get_board_place(event.motion .x, event.motion .y,
-												&x_new, &y_new);
+				get_board_place(event.motion.x, event.motion.y, &x_new, &y_new);
 
 				//Rato tem de ser adjacente a posicao anterior
 				if( ((x_new - x_pac == 1) && (y_new - y_pac == 0)) || 
@@ -286,240 +129,180 @@ int main(int argc, char * argv[]){
 					((x_new - x_pac == 0) && (y_new - y_pac == 1)) || 
 					((x_new - x_pac == 0) && (y_new - y_pac == -1)) ){
 
-					play jogada_p = check_new_pos(x_new, y_new, x_pac, y_pac, new_board);
+					//pos_board jogada_p = check_new_pos(x_new, y_new, x_pac, y_pac, board, dim);
+					
+					jogada_p.object = pac.object;
+					jogada_p.sock_id = pac.sock_id;
 
-					jogada_p.character = 'P';
-					//the old place is cleared
-					clear_place(x_pac, y_pac);
-					x_pac = jogada_p.x;
-					y_pac = jogada_p.y;
-					
-					paint_pacman(x_pac, y_pac, rgb[0], rgb[1], rgb[2]);
-					
-					printf("Pacman move to x-%d y-%d\n", x_pac, y_pac);
-					send(sock_fd, &jogada_p, sizeof(jogada_p), 0);
+					jogada_p.r = pac.r;
+					jogada_p.g = pac.g;
+					jogada_p.b = pac.b;
+
+					jogada_p.x = x_pac;
+					jogada_p.y = y_pac;
+					jogada_p.x_next = x_new;
+					jogada_p.y_next = y_new;
+
+					send(sock_fd, &jogada_p, sizeof(pos_board), 0);
 				}
 			}
 			//Setas
 			if(event.type == SDL_KEYDOWN){
-					int x_new_m, y_new_m;
 
-					if (event.key.keysym.sym == SDLK_LEFT ){
+				pos_board jogada_m;
 
-						x_new_m = init_monster[0]-1;
-						y_new_m = init_monster[1];
+				if (event.key.keysym.sym == SDLK_LEFT ){
 
-						play jogada_m = check_new_pos(x_new_m, y_new_m, init_monster[0],
-																 init_monster[1], new_board);
-						jogada_m.character = 'M';
-						//the old place is cleared
-						clear_place(init_monster[0], init_monster[1]);
+					x_new_m = mon.x_next-1;
+					y_new_m = mon.y_next;
+					x_mon = mon.x_next;
+					y_mon = mon.y_next;
 
-						paint_monster(jogada_m.x, jogada_m.y, rgb[0], rgb[1], rgb[2]);
+					//pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
 
-						init_monster[0] = jogada_m.x;
-						init_monster[1] = jogada_m.y;
+					jogada_m.object = mon.object;
+					jogada_m.sock_id = mon.sock_id;
 
-						printf("Monster move to x-%d y-%d\n", jogada_m.x, jogada_m.y);
-						send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
+					jogada_m.r = mon.r;
+					jogada_m.g = mon.g;
+					jogada_m.b = mon.b;
 
-					}
-					if (event.key.keysym.sym == SDLK_RIGHT ){
+					jogada_m.x = x_mon;
+					jogada_m.y = y_mon;
+					jogada_m.x_next = x_new_m;
+					jogada_m.y_next = y_new_m;
 
-						x_new_m = init_monster[0]+1;
-						y_new_m = init_monster[1];
+					send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
+				}
+				if (event.key.keysym.sym == SDLK_RIGHT ){
 
-						play jogada_m = check_new_pos(x_new_m, y_new_m, init_monster[0],
-																 init_monster[1], new_board);
-						jogada_m.character = 'M';
-						//the old place is cleared
-						clear_place(init_monster[0], init_monster[1]);
+					x_new_m = mon.x_next+1;
+					y_new_m = mon.y_next;
+					x_mon = mon.x_next;
+					y_mon = mon.y_next;
 
-						paint_monster(jogada_m.x, jogada_m.y, rgb[0], rgb[1], rgb[2]);
+					//pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
 
-						init_monster[0] = jogada_m.x;
-						init_monster[1] = jogada_m.y;
+					jogada_m.object = mon.object;
+					jogada_m.sock_id = mon.sock_id;
 
-						printf("Monster move to x-%d y-%d\n", jogada_m.x, jogada_m.y);
-						send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
+					jogada_m.r = mon.r;
+					jogada_m.g = mon.g;
+					jogada_m.b = mon.b;
 
-					}
-					if (event.key.keysym.sym == SDLK_UP ){
+					jogada_m.x = x_mon;
+					jogada_m.y = y_mon;
+					jogada_m.x_next = x_new_m;
+					jogada_m.y_next = y_new_m;
 
-						x_new_m = init_monster[0];
-						y_new_m = init_monster[1]-1;
+					send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
+				}
+				if (event.key.keysym.sym == SDLK_UP ){
 
-						play jogada_m = check_new_pos(x_new_m, y_new_m, init_monster[0],
-																 init_monster[1], new_board);
-						jogada_m.character = 'M';
-						//the old place is cleared
-						clear_place(init_monster[0], init_monster[1]);
+					x_new_m = mon.x_next;
+					y_new_m = mon.y_next-1;
+					x_mon = mon.x_next;
+					y_mon = mon.y_next;
 
-						paint_monster(jogada_m.x, jogada_m.y, rgb[0], rgb[1], rgb[2]);
-						
-						init_monster[0] = jogada_m.x;
-						init_monster[1] = jogada_m.y;
+					//pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
 
-						printf("Monster move to x-%d y-%d\n", jogada_m.x, jogada_m.y);
-						send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
+					jogada_m.object = mon.object;
+					jogada_m.sock_id = mon.sock_id;
 
-					}
-					if (event.key.keysym.sym == SDLK_DOWN ){
+					jogada_m.r = mon.r;
+					jogada_m.g = mon.g;
+					jogada_m.b = mon.b;
 
-						x_new_m = init_monster[0];
-						y_new_m = init_monster[1]+1;
+					jogada_m.x = x_mon;
+					jogada_m.y = y_mon;
+					jogada_m.x_next = x_new_m;
+					jogada_m.y_next = y_new_m;
+					
+					send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
+				}
+				if (event.key.keysym.sym == SDLK_DOWN ){
 
-						play jogada_m = check_new_pos(x_new_m, y_new_m, init_monster[0],
-																 init_monster[1], new_board);
-						jogada_m.character = 'M';
-						//the old place is cleared
-						clear_place(init_monster[0], init_monster[1]);
+					x_new_m = mon.x_next;
+					y_new_m = mon.y_next+1;
+					x_mon = mon.x_next;
+					y_mon = mon.y_next;
 
-						paint_monster(jogada_m.x, jogada_m.y, rgb[0], rgb[1], rgb[2]);
-						
-						init_monster[0] = jogada_m.x;
-						init_monster[1] = jogada_m.y;
+					//pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
 
-						printf("Monster move to x-%d y-%d\n", jogada_m.x, jogada_m.y);
-						send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
-					}
+					jogada_m.object = mon.object;
+					jogada_m.sock_id = mon.sock_id;
 
+					jogada_m.r = mon.r;
+					jogada_m.g = mon.g;
+					jogada_m.b = mon.b;
+
+					jogada_m.x = x_mon;
+					jogada_m.y = y_mon;
+					jogada_m.x_next = x_new_m;
+					jogada_m.y_next = y_new_m;
+
+					send(sock_fd, &jogada_m, sizeof(jogada_m), 0);
+				}
 			}
+
 		}
 	}
 	printf("fim\n");
 	close_board_windows();
 	exit(0);
 }
-	/*
-	pthread_t thread_i;
-	pthread_create (&thread_i, NULL, paint_places, &dim_board);	
-	*/
 
 
-/*
-void create_board(board_info new_board) {
-
-	int cols = new_board.cols;
-	int lines = new_board.lines;
-	char ** board = new_board.board;
-
-	create_board_window(cols, lines);
-
-	for (int i = 0; i < cols; ++i)
-	{
-		for (int j = 0; j < lines; ++j)
-		{
-			if (board[i][j] == 'B') 
-				paint_brick(i,j);
-				
-		}
-	}
-                        
-}*/
-
-struct board_info un_serialize(int msg[]){
-
-	struct board_info board;
-
-	board.lines = msg[0];
-	board.cols = msg[1];
-	
-	int v = 2;
-	int i,j;
-	for (i = 0; i < board.lines; ++i)
-	{
-		for (j = 0; j < board.cols; ++j)
-		{			
-			if( msg[v] == 1 ) board.board[i][j] = 'B';
-			else board.board[i][j] = ' ';
-			v++;
-		}
-
-		board.board[i][j] = '\0';	
-	}
-
-	return board;
-}
 
 
-/*	
+
 void * sync_receiver(){
 
-	player_id msg;
+	pos_board msg1;
 	int err_rcv;
 
-	//Recebe cenas do gajo novo
-	while(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
+	while(err_rcv = recv(sock_fd, &msg1, sizeof(pos_board), 0)>0){
+    	if (msg1.object == 'P' || msg1.object == 'S'){
+			
+    		if(msg1.x != -1) clear_place(msg1.x, msg1.y);
+			
+			if(msg1.object == 'P') paint_pacman(msg1.x_next, msg1.y_next, msg1.r, msg1.g, msg1.b);
+			if(msg1.object == 'S') paint_powerpacman(msg1.x_next, msg1.y_next, msg1.r, msg1.g, msg1.b);
 
-		paint_pacman(msg.pos_pacman[0],msg.pos_pacman[1], msg.rgb[0], msg.rgb[1], msg.rgb[2]);
-		paint_monster(msg.pos_monster[0],msg.pos_monster[1], msg.rgb[0], msg.rgb[1], msg.rgb[2]);
+			//guardar o pos_board deste jogador - pacman
+			if(msg1.sock_id == sock_id){  
+				pac = msg1;
+				flag1 = 1;
+			}
+		}
+
+		if (msg1.object == 'M'){
+    		if(msg1.x != -1) clear_place(msg1.x, msg1.y);
+			paint_monster(msg1.x_next, msg1.y_next, msg1.r, msg1.g, msg1.b);
+
+			//guardar o pos_board deste jogador - monster
+			if(msg1.sock_id == sock_id) {
+				mon = msg1;
+				flag2 = 1;
+			}
+		}
+		if (msg1.object == 'q' || msg1.object == 'Q')
+		{
+			clear_place(msg1.x_next, msg1.y_next);
+		}
+
+		if (msg1.object == 'L'){
+			paint_lemon(msg1.x, msg1.y);
+		}
+		if (msg1.object == 'C'){
+			paint_cherry(msg1.x, msg1.y);
+		}
+
 	}
 
 
-	/*
-	if(err_rcv = recv(sock_fd, &rgb, sizeof(rgb), 0)>0) printf("recebeu cor ou caraças %d %d %d\n", rgb[1], rgb[2], rgb[0]);	
-	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_pacman(msg[0],msg[1], rgb[0], rgb[1], rgb[2]);
-	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0) paint_monster(msg[0],msg[1], rgb[0], rgb[1], rgb[2]);
+
+	return (NULL);
 }
-*/
-
-play check_new_pos(int x_next, int y_next, int x, int y,  board_info new_board){
-
-	play next_move;
-	next_move.x = x;
-	next_move.y = y;
-
-	//proxima posicao NAO pertence a board
-	if ( (x_next > new_board.lines-1) || (y_next > new_board.cols-1) || (x_next < 0) || (y_next < 0) ){
-		//e pode recuar
-		next_move.x = 2*x - x_next;
-		next_move.y = 2*y - y_next;
-		if (new_board.board[next_move.x][next_move.y] == ' '){
-			return(next_move);
-		}
-		//esta preso
-		else{	
-			next_move.x = x;
-			next_move.y = y;
-			return(next_move);
-		}
-	}
-
-	//proxima posicao e um Brick
-	if (new_board.board[x_next][y_next] == 'B')
-	{
-		//e pode recuar
-		next_move.x = 2*x - x_next;
-		next_move.y = 2*y - y_next;
-
-		if ( (next_move.x < new_board.lines) && (next_move.y < new_board.cols) && (next_move.x >= 0) && (next_move.y >= 0) ){
-		
-			if (new_board.board[next_move.x][next_move.y] == ' '){
-				return(next_move);
-			}
-			//esta preso
-			else{	
-				next_move.x = x;
-				next_move.y = y;
-				return(next_move);
-			}
-		}
-
-		else{	
-				next_move.x = x;
-				next_move.y = y;
-				return(next_move);
-			}
-
-	}
-	//Pode avancar
-	if (new_board.board[x_next][y_next] == ' '){
-		next_move.x = x_next;
-		next_move.y = y_next;
-		return(next_move);
-	}
 
 
-	//printf("AQUI");
-}
