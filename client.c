@@ -1,22 +1,14 @@
-#include "UI_library.h"
-#include "sock_init.h"
-#include <sys/types.h>
-#include <unistd.h>
-#include <pthread.h>
 #include "Proj1.h"
-
-Uint32 Event_ShowCharacter;
 
 pos_board pac;
 pos_board mon;
 
 int sock_fd, sock_id, flag1, flag2;
 
-
 int main(int argc, char * argv[]){
 
-    if (argc <2){//-----------------------------------------------------------------------falta o adress do server
-      printf("second argument should be server address\n");
+    if (argc <5){
+      printf("2º argument should be server address, 3º-5º should be RGB\n");
       exit(-1);}
 
     SDL_Event event;
@@ -25,9 +17,8 @@ int main(int argc, char * argv[]){
 	inet_aton(argv[1], &server_addr.sin_addr);
 	sock_fd = connect_server (sock_fd, server_addr);
 
-	int rgb[3];
 	int msg[2];
-	int dim[2];
+
 	int bricks;
 
 	pid_t npid = getpid();
@@ -35,25 +26,24 @@ int main(int argc, char * argv[]){
 	
 	char ** board;
 
-	int i, j;
 	int err_rcv;
+
+	colour c_colour;
+
+	c_colour.r = atoi(argv[2]);
+	c_colour.g = atoi(argv[3]);
+	c_colour.b = atoi(argv[4]);
+
+
+	printf("COR - %d, %d, %d\n",c_colour.r, c_colour.g, c_colour.b);
+
+
+	send(sock_fd, &c_colour, sizeof(colour), 0);
+
 	//Recebe linhas e colunas
 	if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
-		
-		dim[0] = msg[0];
-		dim[1] = msg[1];
 		create_board_window(msg[0],msg[1]);
 		printf("Board criada!!!\n"); 
-	}
-	
-	//Criacao da matriz window
-	board = malloc(sizeof(char *) * (msg[0]));           
-	for ( i = 0 ; i < msg[0]; i++){
-		board[i] = malloc (sizeof(char) * (msg[1]));
-		for (j = 0; j < msg[1]; j++){
-			board[i][j] = ' ';
-		}
-		board[i][j] = '\0';
 	}
 
 	//Recebe numero de Bricks
@@ -64,7 +54,6 @@ int main(int argc, char * argv[]){
 	for(int i = 0; i < bricks ; i++){
 		if(err_rcv = recv(sock_fd, &msg, sizeof(msg), 0)>0){
 			paint_brick(msg[0],msg[1]);
-			board[msg[0]][msg[1]] = 'B';
 		}
 	}
 
@@ -77,8 +66,6 @@ int main(int argc, char * argv[]){
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, sync_receiver, NULL);
 	//send(sock_fd, &thread_id, sizeof(thread_id), 0);
-
-	pos_board jogada;
 
 	flag1 = 0;
     flag2 = 0;
@@ -101,7 +88,7 @@ int main(int argc, char * argv[]){
 */
 
 	int done = 0;
-	int npos[4];
+
 
 	pac.x = pac.x_next;
 	pac.y = pac.y_next;
@@ -319,50 +306,3 @@ void * sync_receiver(){
 }
 
 
-/*
-pos_board check_new_pos(int x_next, int y_next, int x, int y, char ** board, int dim[2]){
-
-	pos_board next_move;
-
-	//Esperado
-	next_move.x_next = x_next;
-	next_move.y_next = y_next;
-	next_move.x = x;
-	next_move.y = y;
-
-	//proxima posicao NAO pertence a board ou e um Brick
-	if((x_next > dim[0]-1) || (y_next > dim[1]-1) || (x_next < 0) || (y_next < 0) || board[x_next][y_next] == 'B') {
-		//Bounce back
-		next_move.x_next = 2*x - x_next;
-		next_move.y_next = 2*y - y_next;
-		//Caso o Bounce back seja para dentro da board
-		if ( (next_move.x_next < dim[0]) && (next_move.y_next < dim[1]) && (next_move.x_next >= 0) && (next_move.y_next >= 0) ){
-			//pode fazer o bounce back
-			if (board[next_move.x_next][next_move.y_next] == ' '){
-				return(next_move);
-			}
-			//esta preso
-			else{	
-				next_move.x_next = x;
-				next_move.y_next = y;
-				return(next_move);
-			}
-		}
-		else{	
-				next_move.x_next = x;
-				next_move.y_next = y;
-				return(next_move);
-			}
-
-	}
-	//Pode avancar
-	if (board[x_next][y_next] == ' '){
-		next_move.x_next = x_next;
-		next_move.y_next = y_next;
-		return(next_move);
-	}
-
-
-	//printf("AQUI");
-}
-*/

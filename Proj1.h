@@ -2,7 +2,17 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include "UI_library.h"
+#include "sock_init.h"
+#include <pthread.h>
+#include <stdlib.h> 
+#include <SDL2/SDL.h>
+#include <sys/socket.h>
+#include <stdio.h>
+#include <string.h>
+#include <time.h>
 
+#define MAX_SIZE 300
 
 //ESTRUTURAS
 
@@ -21,7 +31,11 @@ typedef struct pos_board{
 	int time;
 }pos_board;
 
-
+typedef struct colour{
+	int r;
+	int g;
+	int b;
+}colour;
 
 
 typedef struct play{
@@ -57,7 +71,7 @@ pos_board ** board_read();
 
 void send_board(int client_sock, pos_board ** new_board);
 
-player_id * init_player (player_id * new_player, pos_board ** new_board, pid_t npid, int client_sock, pthread_t player_thread);
+player_id * init_player (player_id * new_player, pos_board ** new_board, colour c_colour, int client_sock, pthread_t player_thread);
 
 void board_update (pos_board ** new_board, player_id  * new_player);
 

@@ -1,22 +1,4 @@
-//gcc teste.c UI_library.c -o teste-UI -lSDL2 -lSDL2_image
-#include <SDL2/SDL.h>
-
-//to use internet domain sockets:
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <stdlib.h> 
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
-#include <unistd.h>
-#include <math.h>
-#include "UI_library.h"
 #include "Proj1.h"
-#include "sock_init.h"
-
-#include <pthread.h>
-
 
 int sock_fd;
 int server_socket;
@@ -31,18 +13,15 @@ int comms[50]={0};  //array de socket_ids
 int n_player = 0;
 int total_p = -1;
 
-int countp [50]={0};
+int countp [MAX_SIZE]={0};
 
-int countm [50]={0};
+int countm [MAX_SIZE]={0};
 
-int done [300] = {0};
+int done [MAX_SIZE] = {0};
 
-int fruit [50] = {0};
+int fruit [MAX_SIZE] = {0};
 
-int edies [50] = {0};
-
-
-
+int edies [MAX_SIZE] = {0};
 
 
 
@@ -84,6 +63,7 @@ int main(int argc, char* argv[]){
 	int err_rcv;
 
 	pthread_t player_thread;
+	colour c_colour;
 
 
 	//player_id * head = NULL;
@@ -102,6 +82,13 @@ int main(int argc, char* argv[]){
 
 		printf("\n-- Entrou um jogador (Total: %d) --\n", n_player);
 
+		//RECEBE COR
+		if ( (err_rcv = recv(client_sock, &c_colour, sizeof(colour), 0)) < 0 ) {
+			printf("ERRO a receber cor");
+			exit(-1);
+		}
+		printf("COR - %d, %d, %d\n",c_colour.r, c_colour.g, c_colour.b);
+
 		//ENVIAR A BOARD INICIAL lida do ficheiro
 		send_board(client_sock, new_board);
 
@@ -113,14 +100,13 @@ int main(int argc, char* argv[]){
 			//printf("recebeu o pid:  %d , do jogador %d \n", npid, n_player);
 		}
 
-
 		//VERIFICAR SE HA ESPACO PARA MAIS 1 PLAYER
 		if (dim[0]*dim[1] - n_bricks < n_player*2) 
 			printf("CAN'T FIT ANOTHER ONE -- DJ KHALED  \n");
 		else{ 
 			//Novo jogador
 			player_id  * new_player = NULL;
-			new_player = init_player(new_player, new_board, npid, client_sock, player_thread); 
+			new_player = init_player(new_player, new_board, c_colour, client_sock, player_thread); 
 			
 			board_update (new_board, new_player);
 			
@@ -153,7 +139,6 @@ int main(int argc, char* argv[]){
 			}*/
 		}
 	}
-	
 	return (0);	
 }
  	
@@ -179,7 +164,6 @@ void * comms_Thread(void * input){
 	pthread_mutex_t board_mutex;
 
 	int auxf;
-
 
 	//registar o instante em que foi criado o jogador
 	struct tm * local;
@@ -212,10 +196,10 @@ void * comms_Thread(void * input){
 	}
 
 	//printf("inicio - %d\n", time_init);
-
 	//thread dos 30s
 	pthread_t time_thread;
 	pthread_create(&time_thread, NULL, thirty_reset, (void *)((pos_board**)input));
+
 
 
 	//-------------------------RECEBE JOGADA---------------------------------------
@@ -265,7 +249,6 @@ void * comms_Thread(void * input){
 									cfruit.y_next = i;
 									auxf++;
 									for (int n = 0; n < n_player; ++n) send(comms[n], &cfruit, sizeof (pos_board), 0);  
-									printf("AUX F %d\n", auxf);
 								}
 								else if(auxf == 2) d=0;
 							}
@@ -279,7 +262,7 @@ void * comms_Thread(void * input){
     	}
     	else{  
     		if ((countp[k] < 2 && play.object == 'P') || (countm[k] < 2 && play.object == 'M')||(countp[k] < 2 && play.object == 'S')){
-    			
+
     			play.time = time_aux;
 
     			if(play.object == 'P' || play.object == 'S'){
@@ -320,9 +303,10 @@ void * comms_Thread(void * input){
 				    	for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
 						pthread_mutex_unlock(&board_mutex);	
 			    	}
-			    	//FRUTA - PACMAN  E  FRUTA - SUPERPACMAN  
+			    	//FRUTA - RESTO  
 			    	else if((aux.object == 'L' && play.object == 'P') || (aux.object == 'L' && play.object == 'S') ||
-	    			(aux.object == 'C' && play.object == 'P') || (aux.object == 'C' && play.object == 'S')){
+	    			(aux.object == 'C' && play.object == 'P') || (aux.object == 'C' && play.object == 'S')||
+	    			(aux.object == 'L' && play.object == 'M') || (aux.object == 'C' && play.object == 'M')){
 
 			    		//pthread_mutex_lock(&board_mutex);
 			    		if(play.object == 'P') play.object = 'S';
@@ -438,7 +422,6 @@ void * comms_Thread(void * input){
 					}
 					//Brick
 					else if (aux.object == 'B'){
-						printf("BOUNCE\n");
 						//Bounce back
 						int n_x = 2*play.x - play.x_next;
 						int n_y = 2*play.y - play.y_next;
@@ -474,7 +457,6 @@ void * comms_Thread(void * input){
 					}
 					//Pode avancar
 					else{ 	
-						printf("COCO\n");
 						((pos_board**)input)[play.y_next][play.x_next] = play;
 	    				((pos_board**)input)[play.y][play.x] = clean;
 
@@ -487,8 +469,6 @@ void * comms_Thread(void * input){
 				}
 				//QUANDO QUER SAIR DA BOARD
 		    	else{
-
-					printf("BOUNCE\n");
 					//Bounce back
 					int n_x = 2*play.x - play.x_next;
 					int n_y = 2*play.y - play.y_next;
@@ -530,8 +510,8 @@ void * comms_Thread(void * input){
 		    	}
     		}
     		//fica no mm sitio
+
     		else{
-    			
     			play.x_next = play.x;
 				play.y_next = play.y;
 
@@ -540,7 +520,7 @@ void * comms_Thread(void * input){
     		}
     	}
 
-/*		printf("--------------------------------\n");
+	/*	printf("--------------------------------\n");
 		for (int i = 0; i < dim[1]; ++i)
 		{
 			for (int j = 0; j < dim[0]; ++j)
@@ -593,6 +573,8 @@ void * thirty_reset(void * input){
 	while(!done[k]){ 
 
 		pthread_mutex_lock(&board_mutex);
+
+
 		for (int i = 0; i < dim[1]; ++i)
 		{
 			for (int j = 0; j < dim[0]; ++j)
@@ -605,8 +587,8 @@ void * thirty_reset(void * input){
 				}	
 			}
 		}
+		
 		pthread_mutex_unlock(&board_mutex);
-
 
 		struct tm * local1;
 		time_t t = time(NULL);
@@ -650,6 +632,7 @@ void * thirty_reset(void * input){
 		//passa 1s
 		if (time_aux-time1 >= 1) 
 		{
+			printf("-----------------------------\n");
 			time1 = time_aux;
 			//printf("Tempo - %d\n",time_aux);
 			countp[k] = 0;
@@ -657,7 +640,7 @@ void * thirty_reset(void * input){
 		
 	
 			//passam 30s - pacman
-			if (time_aux-pacman.time >= 30) 
+			if (time_aux-pacman.time >= 6) 
 			{
 				printf(" - Randoom pos P -\n");
 				pthread_mutex_lock(&board_mutex);
@@ -676,17 +659,13 @@ void * thirty_reset(void * input){
 				aux1.x = pacman.x_next;
 				aux1.y = pacman.y_next;
 				aux1.time = time_aux;
-
 				
 		    	((pos_board**)input)[pacman.y_next][pacman.x_next] = clean;
 		    	((pos_board**)input)[aux1.y_next][aux1.x_next] = aux1;
-		    	pthread_mutex_unlock(&board_mutex);
-
+		    	
 		    	for (int i = 0; i < n_player; ++i) send(comms[i], &aux1, sizeof (pos_board), 0);
 		    	pacman = aux1;
-
-
-
+		  	    pthread_mutex_unlock(&board_mutex);
 			}
 			//passam 30s - monster
 			if (time_aux-monster.time >= 30) 
@@ -721,53 +700,6 @@ void * thirty_reset(void * input){
 	}
 }
 
-/*
-pos_board check_new_pos(int x_next, int y_next, int x, int y, char ** board, int dim[2]){
-
-	pos_board next_move;
-
-	//Esperado
-	next_move.x_next = x_next;
-	next_move.y_next = y_next;
-	next_move.x = x;
-	next_move.y = y;
-
-	//proxima posicao NAO pertence a board ou e um Brick
-	if((x_next > dim[0]-1) || (y_next > dim[1]-1) || (x_next < 0) || (y_next < 0) || board[x_next][y_next] == 'B') {
-		//Bounce back
-		next_move.x_next = 2*x - x_next;
-		next_move.y_next = 2*y - y_next;
-		//Caso o Bounce back seja para dentro da board
-		if ( (next_move.x_next < dim[0]) && (next_move.y_next < dim[1]) && (next_move.x_next >= 0) && (next_move.y_next >= 0) ){
-			//pode fazer o bounce back
-			if (board[next_move.x_next][next_move.y_next] == ' '){
-				return(next_move);
-			}
-			//esta preso
-			else{	
-				next_move.x_next = x;
-				next_move.y_next = y;
-				return(next_move);
-			}
-		}
-		else{	
-				next_move.x_next = x;
-				next_move.y_next = y;
-				return(next_move);
-			}
-
-	}
-	//Pode avancar
-	if (board[x_next][y_next] == ' '){
-		next_move.x_next = x_next;
-		next_move.y_next = y_next;
-		return(next_move);
-	}
-
-
-	//printf("AQUI");
-}
-*/
 
 void spawn_fruits (int n_player, pos_board ** new_board){
 	
@@ -889,11 +821,10 @@ void send_board(int client_sock, pos_board ** new_board){
 }
 
 
-player_id * init_player (player_id * new_player, pos_board ** new_board, pid_t npid, int client_sock, pthread_t player_thread){
+player_id * init_player (player_id * new_player, pos_board ** new_board, colour c_colour, int client_sock, pthread_t player_thread){
 
 		new_player = malloc(sizeof(player_id));  
 
-		new_player->player_pid = npid; 
 		new_player->player_n = n_player;
 		new_player->thread_id = player_thread;	
 
@@ -925,9 +856,9 @@ player_id * init_player (player_id * new_player, pos_board ** new_board, pid_t n
 		new_player->pos_monster[1]=aux_monster[1];
 
 		//Cor do Jogador
-		new_player->rgb[0] = rand()%255;
-		new_player->rgb[1] = rand()%255;
-		new_player->rgb[2] = rand()%255;
+		new_player->rgb[0] = c_colour.r;
+		new_player->rgb[1] = c_colour.g;
+		new_player->rgb[2] = c_colour.b;
 		
 		new_player->sock_id = client_sock;
 		new_player->next = NULL;
@@ -965,95 +896,4 @@ void board_update (pos_board ** new_board, player_id  * new_player){
 	new_board[new_player -> pos_monster[0]][new_player->pos_monster[1]].y = -1;
 }
 
-
-
-/*
-player_id * list_player(player_id * new_player, player_id* head){   
-
-	if (head == NULL) {	  						
-		head = new_player;
-		return(head);
-	}
-
-	player_id * run = head;
-
-	while (run -> next != NULL)
-		run = run -> next;
-			
-	run -> next = malloc(sizeof(player_id));	
-	run -> next = new_player;
-	return (head);
-}	
-
-
-player_id * find_player (player_id * head, pid_t npid){
-
-	player_id * aux = head;
-	while(aux){
-		if (aux -> player_pid == npid) return(aux);
-
-		aux = aux->next;
-	}
-
-	printf("NAO ENCONTROU NA LISTA TA FDD\n");
-	exit(-1);
-}
-
-
-void send_spawn(player_id * player, player_id * head){
-
-	player_id * aux = head;
-	player_id msg;
-
-	int sock;
-	pid_t npid = player -> player_pid;
-
-	msg.rgb[0] = player -> rgb[0];
-	msg.rgb[1] = player -> rgb[1];
-	msg.rgb[2] = player -> rgb[2];
-
-	msg.pos_pacman[0] = player -> pos_pacman[0];
-	msg.pos_pacman[1] = player -> pos_pacman[1];
-
-	msg.pos_monster[0] = player -> pos_monster[0];
-	msg.pos_monster[1] = player -> pos_monster[1];
-
-	while(aux){
-		if (aux -> player_pid != npid){ 
-			sock = aux -> sock_id;
-			send(sock, &msg, sizeof(msg), 0);			
-		}
-	aux = aux->next;
-	}
-}
-
-
-void send_board2(int client_sock, player_id* head){
-
-	int rgb[3];
-	int pos1[2];
-	int pos2[2];
-
-	player_id * aux = head;
-	while(aux){
-
-		//mandar informacoes para o novo jogador
-			rgb[0] = aux -> rgb[0];
-			rgb[1] = aux -> rgb[1];
-			rgb[2] = aux -> rgb[2];
-			//printf("rgb - %d %d %d \n", rgb[0], rgb[1], rgb[2]);
-			send(client_sock, &rgb, sizeof(rgb), 0);
-
-			pos1[0] = aux -> pos_pacman[0];
-			pos1[1] = aux -> pos_pacman[1];
-			send(client_sock, &pos1, sizeof(pos1), 0);
-		
-			pos2[0] = aux -> pos_monster[0];
-			pos2[1] = aux -> pos_monster[1];
-			send(client_sock, &pos2, sizeof(pos2), 0);
-
-			aux = aux -> next;
-	}
-}
-*/
 
