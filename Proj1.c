@@ -332,6 +332,8 @@ void * comms_Thread(void * input){
 		    			if (aux.object == 'C') fruit[k] = 2;
 				    	
 		    			((pos_board**)input)[play.y_next][play.x_next] = play;
+		    			((pos_board**)input)[play.y][play.x] = clean;
+
 		    			
 				    	for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
 						pthread_mutex_unlock(&board_mutex);
@@ -346,6 +348,7 @@ void * comms_Thread(void * input){
 							px=rand()%(dim[0]-1);
 							if(((pos_board**)input)[py][px].object == ' ') break;
 						}
+
 						// PACMAN é comido pelo Monster
 						if (play.object == 'P')
 						{
@@ -358,9 +361,9 @@ void * comms_Thread(void * input){
 							for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
 							pthread_mutex_unlock(&board_mutex);
 						}
+
 						// Monster come PACMAN
 						else{
-
 							aux.x = aux.x_next;
 							aux.y = aux.y_next;
 							aux.x_next = px;
