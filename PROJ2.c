@@ -106,7 +106,7 @@ int main(int argc, char* argv[]){
 		}
 
 		//VERIFICAR SE HA ESPACO PARA MAIS 1 PLAYER
-		if (dim[0]*dim[1] - n_bricks < n_player*2) 
+		if (dim[0]*dim[1] - n_bricks < (n_player-1)*4) 
 			printf("CAN'T FIT ANOTHER ONE -- DJ KHALED  \n");
 		else{ 
 			//Novo jogador
@@ -133,6 +133,8 @@ int main(int argc, char* argv[]){
 			}
 
 			pthread_create(&player_thread, NULL, comms_Thread, (void *)new_board);
+
+			printf("first pos send\n");
 /*
 			//Verificar se a lista esta a ficar feita
 			player_id * aux = head;
@@ -164,11 +166,11 @@ void * clock_time(void * input){
 		local00 = localtime(&t00);
 		actual_time = (local00 -> tm_min)*60 + local00->tm_sec;
 
-		if(actual_time-a == 1){
-			printf(" -- %d seconds -- \n", aa);
-			aa ++;
-			a = actual_time;
-		}
+		//if(actual_time-a == 1){
+		//	printf(" -- %d seconds -- \n", aa);
+		//	aa ++;
+		//	a = actual_time;
+		//}
 
 
 	}
@@ -867,24 +869,34 @@ player_id * init_player (player_id * new_player, pos_board ** new_board, colour 
 
 		//DEFINIR PRIMEIRA POSICAO DO PACMAN
 		while (1){ 
-			aux_pacman[0]=rand()%(l-1);
-			aux_pacman[1]=rand()%(c-1);
+			aux_pacman[0]=rand()%(l);
+			aux_pacman[1]=rand()%(c);
+
+			
+
 			//printf("Posicao possivel: %d %d\n", aux_pacman[0], aux_pacman[1] );
 			if(new_board[aux_pacman[0]][aux_pacman[1]].object == ' ') break;
 		}
 		new_player->pos_pacman[0]=aux_pacman[0];
 		new_player->pos_pacman[1]=aux_pacman[1];
 
+		printf(".. P - posivel pos: %d, %d\n", aux_pacman[1], aux_pacman[0]);
+
 		//DEFINIR PRIMEIRA POSICAO DO MONSTER
 		while(1){
-			aux_monster[0]=rand()%(l-1);
-			aux_monster[1]=rand()%(c-1);
+
+			
+
+			aux_monster[0]=rand()%(l);
+			aux_monster[1]=rand()%(c);
 			//printf("Posicao possivel: %d %d\n", aux_monster[0], aux_monster[1] );
 			if( new_board[aux_monster[0]][aux_monster[1]].object == ' ' && ((aux_pacman[0]!=aux_monster[0]) && (aux_pacman[1]!=aux_monster[1])) )
 				break;
 		}	
 		new_player->pos_monster[0]=aux_monster[0];
 		new_player->pos_monster[1]=aux_monster[1];
+
+		printf(".. M - posivel pos: %d, %d\n", aux_monster[1], aux_monster[0]);
 
 		//Cor do Jogador
 		new_player->rgb[0] = c_colour.r;
@@ -894,7 +906,7 @@ player_id * init_player (player_id * new_player, pos_board ** new_board, colour 
 		new_player->sock_id = client_sock;
 		new_player->next = NULL;
 
-		//printf(" sock_id client no init - %d\n", client_sock);
+		printf("\n");
 
 		return(new_player);
 }
