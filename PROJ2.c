@@ -41,7 +41,9 @@ int main(int argc, char* argv[]){
 	      printf("%c", new_board[i][j].object);
 	    }
 	    printf("\n");
-	  }
+	}
+
+
 
 
 	//Criação da Socket
@@ -106,8 +108,14 @@ int main(int argc, char* argv[]){
 		}
 
 		//VERIFICAR SE HA ESPACO PARA MAIS 1 PLAYER
-		if (dim[0]*dim[1] - n_bricks < (n_player-1)*4) 
-			printf("CAN'T FIT ANOTHER ONE -- DJ KHALED  \n");
+		if (dim[0]*dim[1] - n_bricks < (n_player-1)*4+2){
+			printf("NOT ENOUGH SPACE FOR NEW PLAYER\n");
+			n_player--;
+			total_p--;
+			pos_board quit;
+			quit.object='Y';
+			send(client_sock, &quit, sizeof(pos_board), 0);
+		}
 		else{ 
 			//Novo jogador
 			player_id  * new_player = NULL;
@@ -682,8 +690,8 @@ void * thirty_reset(void * input){
 
 				aux1 = pacman;
 				while (1){ 
-					py=rand()%(dim[1]-1);
-					px=rand()%(dim[0]-1);
+					py=rand()%(dim[1]);
+					px=rand()%(dim[0]);
 					if(((pos_board**)input)[py][px].object == ' ') break;
 				}
 
@@ -702,14 +710,14 @@ void * thirty_reset(void * input){
 		  	    pthread_mutex_unlock(&board_mutex);
 			}
 			//passam 30s - monster
-			if (actual_time-monster.time >= 30){
+			if (actual_time-monster.time >= 8){
 				printf(" - Randoom pos M -\n");
 				pthread_mutex_lock(&board_mutex);
 
 				aux1 = monster;
 				while (1){ 
-					py=rand()%(dim[1]-1);
-					px=rand()%(dim[0]-1);
+					py=rand()%(dim[1]);
+					px=rand()%(dim[0]);
 					if(((pos_board**)input)[py][px].object == ' ') break;
 				}
 

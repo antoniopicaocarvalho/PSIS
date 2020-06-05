@@ -5,6 +5,8 @@ pos_board mon;
 
 int sock_fd, sock_id, flag1, flag2;
 
+int done = 0;
+
 int main(int argc, char * argv[]){
 
     if (argc <5){
@@ -87,7 +89,7 @@ int main(int argc, char * argv[]){
 	SDL_PushEvent(&new_event);
 */
 
-	int done = 0;
+	
 
 
 	pac.x = pac.x_next;
@@ -300,7 +302,14 @@ void * sync_receiver(){
 			paint_cherry(msg1.x, msg1.y);
 		}
 		else if(msg1.object == 'x') printf("\n***** SCORE BOARD *****\n");
-		else if(msg1.object == 'X') printf("- Player %d : %d pts\n", msg1.sock_id, msg1.points);
+		else if(msg1.object == 'X') printf("- Player %d : %d pts\n", msg1.sock_id-3, msg1.points);
+		else if(msg1.object == 'Y'){
+			printf("NOT ABLE TO JOIN\n");
+			done = SDL_TRUE;
+			flag1=1; 
+			flag2=1; 
+		} 
+
 
 
 
