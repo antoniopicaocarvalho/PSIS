@@ -117,24 +117,27 @@ int main(int argc, char* argv[]){
 			send(client_sock, &quit, sizeof(pos_board), 0);
 		}
 		else{ 
-			//Novo jogador
+			//New player
 			player_id  * new_player = NULL;
+			pthread_mutex_lock(&board_mutex);
 			new_player = init_player(new_player, new_board, c_colour, client_sock, player_thread); 
 			board_update (new_board, new_player);
+			pthread_mutex_unlock(&board_mutex);
 
-			//atualizar o array de sock_ids
+			//update sockid's array
 			comms[n_player-1] = new_player-> sock_id;
 
-			//instancia o nº de frutas correspondente ao n_player
+
+			pthread_mutex_lock(&board_mutex);
+			//Create & Send Fruit's pos
 			spawn_fruits(n_player, new_board);
-
-
-			//enviar posiçao inicial a todos os jogadores
+			//Send First pos of new player to the rest
 			for (int i = 0; i < n_player-1; ++i)
 			{
 				send(comms[i], &new_board[new_player -> pos_pacman[0]][new_player->pos_pacman[1]], sizeof (pos_board), 0);
 				send(comms[i], &new_board[new_player -> pos_monster[0]][new_player->pos_monster[1]], sizeof (pos_board), 0);
 			}
+			pthread_mutex_lock(&board_mutex);
 
 			pthread_create(&player_thread, NULL, comms_Thread, (void *)new_board);
 
@@ -742,10 +745,7 @@ void spawn_fruits (int n_player, pos_board ** new_board){
 		while (1){ 
 			y=rand()%(dim[1]-1);
 			x=rand()%(dim[0]-1);
-			if(((pos_board**)input)[py][px].object == ' '){
-				pthread_mutex_lock(&board_mutex);
-				break;								
-			} 
+			if(((pos_board**)input)[py][px].object == ' ') break;
 		}
 
 		new_board[y][x].object = 'L';
@@ -756,9 +756,7 @@ void spawn_fruits (int n_player, pos_board ** new_board){
 		while (1){ 
 			y=rand()%(dim[1]-1);
 			x=rand()%(dim[0]-1);
-			if(((pos_board**)input)[py][px].object == ' '){
-				break;								
-			} 
+			if(((pos_board**)input)[py][px].object == ' ') break;							
 		}
 		new_board[y][x].object = 'C';
 		new_board[y][x].x = x;
@@ -770,7 +768,6 @@ void spawn_fruits (int n_player, pos_board ** new_board){
 				send(comms[i], &aux_1, sizeof (pos_board), 0);
 				send(comms[i], &aux_2, sizeof (pos_board), 0);
 			}
-		pthread_mutex_unlock(&board_mutex);
 	}
 }
 
@@ -876,15 +873,10 @@ player_id * init_player (player_id * new_player, pos_board ** new_board, colour 
 		while (1){ 
 			aux_pacman[0]=rand()%(l);
 			aux_pacman[1]=rand()%(c);
-			if(new_board[aux_pacman[0]][aux_pacman[1]].object == ' '){
-				pthread_mutex_lock(&board_mutex);
-				break;
-			}
-			
+			if(new_board[aux_pacman[0]][aux_pacman[1]].object == ' ') break;
 		}
 		new_player->pos_pacman[0]=aux_pacman[0];
 		new_player->pos_pacman[1]=aux_pacman[1];
-		pthread_mutex_unlock(&board_mutex);
 
 		//DEFINE MONSTER's FIRST POS
 		while(1){
