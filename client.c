@@ -23,7 +23,6 @@ int main(int argc, char * argv[]){
 
 	int bricks;
 
-	pid_t npid = getpid();
 	printf("o meu pid é %d \n", npid);
 	
 	char ** board;
@@ -62,8 +61,6 @@ int main(int argc, char * argv[]){
 	printf("Board Concluida\n\n");
 
 	if(err_rcv = recv(sock_fd, &sock_id, sizeof(int), 0)>0) {};
-
-	send(sock_fd, &npid, sizeof(npid), 0);
 
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, sync_receiver, NULL);
