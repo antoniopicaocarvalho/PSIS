@@ -22,8 +22,6 @@ int main(int argc, char * argv[]){
 	int msg[2];
 
 	int bricks;
-
-	printf("o meu pid é %d \n", npid);
 	
 	char ** board;
 
@@ -85,9 +83,6 @@ int main(int argc, char * argv[]){
 
 	SDL_PushEvent(&new_event);
 */
-
-	
-
 
 	pac.x = pac.x_next;
 	pac.y = pac.y_next;
@@ -263,7 +258,18 @@ void * sync_receiver(){
 	int scoreboard[2][MAX_SIZE];
 	int n_players;
 
+	/*
+	pthread_mutex_t board_mutex;
+	if (pthread_mutex_init(&board_mutex, NULL) != 0)
+    {
+        printf("\n mutex init failed\n");
+        exit(-1);
+    } */
+
 	while(err_rcv = recv(sock_fd, &msg1, sizeof(pos_board), 0)>0){
+
+		//pthread_mutex_lock(&board_mutex);
+
     	if (msg1.object == 'P' || msg1.object == 'S'){
 			
     		if(msg1.x != -1) clear_place(msg1.x, msg1.y);
@@ -306,9 +312,8 @@ void * sync_receiver(){
 			flag1=1; 
 			flag2=1; 
 		} 
-
-
-
+		
+		//pthread_mutex_unlock(&board_mutex);
 
 	}
 
