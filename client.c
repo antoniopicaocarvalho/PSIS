@@ -5,6 +5,8 @@ pos_board mon;
 
 int sock_fd, sock_id, flag1, flag2;
 
+int done = 0;
+
 int main(int argc, char * argv[]){
 
     if (argc <5){
@@ -20,9 +22,6 @@ int main(int argc, char * argv[]){
 	int msg[2];
 
 	int bricks;
-
-	pid_t npid = getpid();
-	printf("o meu pid é %d \n", npid);
 	
 	char ** board;
 
@@ -61,8 +60,6 @@ int main(int argc, char * argv[]){
 
 	if(err_rcv = recv(sock_fd, &sock_id, sizeof(int), 0)>0) {};
 
-	send(sock_fd, &npid, sizeof(npid), 0);
-
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, sync_receiver, NULL);
 	//send(sock_fd, &thread_id, sizeof(thread_id), 0);
@@ -86,9 +83,6 @@ int main(int argc, char * argv[]){
 
 	SDL_PushEvent(&new_event);
 */
-
-	int done = 0;
-
 
 	pac.x = pac.x_next;
 	pac.y = pac.y_next;
@@ -261,7 +255,21 @@ void * sync_receiver(){
 	pos_board msg1;
 	int err_rcv;
 
+	int scoreboard[2][MAX_SIZE];
+	int n_players;
+
+	/*
+	pthread_mutex_t board_mutex;
+	if (pthread_mutex_init(&board_mutex, NULL) != 0)
+    {
+        printf("\n mutex init failed\n");
+        exit(-1);
+    } */
+
 	while(err_rcv = recv(sock_fd, &msg1, sizeof(pos_board), 0)>0){
+
+		//pthread_mutex_lock(&board_mutex);
+
     	if (msg1.object == 'P' || msg1.object == 'S'){
 			
     		if(msg1.x != -1) clear_place(msg1.x, msg1.y);
@@ -275,8 +283,7 @@ void * sync_receiver(){
 				flag1 = 1;
 			}
 		}
-
-		if (msg1.object == 'M'){
+		else if (msg1.object == 'M'){
     		if(msg1.x != -1) clear_place(msg1.x, msg1.y);
 			paint_monster(msg1.x_next, msg1.y_next, msg1.r, msg1.g, msg1.b);
 
@@ -286,17 +293,27 @@ void * sync_receiver(){
 				flag2 = 1;
 			}
 		}
-		if (msg1.object == 'q' || msg1.object == 'Q')
+		else if (msg1.object == 'q' || msg1.object == 'Q')
 		{
 			clear_place(msg1.x_next, msg1.y_next);
 		}
 
-		if (msg1.object == 'L'){
+		else if (msg1.object == 'L'){
 			paint_lemon(msg1.x, msg1.y);
 		}
-		if (msg1.object == 'C'){
+		else if (msg1.object == 'C'){
 			paint_cherry(msg1.x, msg1.y);
 		}
+		else if(msg1.object == 'x') printf("\n***** SCORE BOARD *****\n");
+		else if(msg1.object == 'X') printf("- Player %d : %d pts\n", msg1.sock_id-3, msg1.points);
+		else if(msg1.object == 'Y'){
+			printf("NOT ABLE TO JOIN\n");
+			done = SDL_TRUE;
+			flag1=1; 
+			flag2=1; 
+		} 
+		
+		//pthread_mutex_unlock(&board_mutex);
 
 	}
 

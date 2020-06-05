@@ -29,6 +29,8 @@ typedef struct pos_board{
 	int x;
 	int y; 
 	int time;
+
+	int points;
 }pos_board;
 
 typedef struct colour{
@@ -74,6 +76,8 @@ void send_board(int client_sock, pos_board ** new_board);
 player_id * init_player (player_id * new_player, pos_board ** new_board, colour c_colour, int client_sock, pthread_t player_thread);
 
 void board_update (pos_board ** new_board, player_id  * new_player);
+
+void * clock_time(void * input);
 
 void * comms_Thread(void * input);
 
