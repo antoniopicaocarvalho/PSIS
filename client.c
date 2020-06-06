@@ -58,7 +58,10 @@ int main(int argc, char * argv[]){
 
 	printf("Board Concluida\n\n");
 
-	if(err_rcv = recv(sock_fd, &sock_id, sizeof(int), 0)>0) {};
+	if(err_rcv = recv(sock_fd, &sock_id, sizeof(int), 0)>0) {
+		printf("Recebe sock\n");
+
+	}
 
 	pthread_t thread_id;
 	pthread_create(&thread_id, NULL, sync_receiver, NULL);

@@ -27,6 +27,8 @@
      perror("bind");
      exit(-1);
     }
+    // Informa que o socket foi creado e ligado a um nome 
+    printf("\nsocket created and binded \n");  
     return sock_fd;
   }
 // -----------------Listen----------------------------------------------------------------

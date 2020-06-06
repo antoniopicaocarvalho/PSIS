@@ -171,6 +171,9 @@ void * comms_Thread(void * input){
 	pos_board clean;
 	clean.object = ' ';
 
+	pos_board safe;
+	safe.object = 'q';
+
 	int sock = comms[n_player-1];
 
 	int k = total_p;
@@ -237,13 +240,13 @@ void * comms_Thread(void * input){
 			while (comms[w] != play.sock_id) w++;
 			if (w != n_player) comms[w] = comms[n_player];
 
-			close(play.sock_id);
+			//close(play.sock_id);
 
 			for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
 			//pthread_mutex_unlock(&board_mutex);
 
 			//clean fruit when player exits
-			if (n_player >= 1){
+			if (n_player > 0){
 
 				pos_board cfruit;
 				cfruit.object = 'Q';
@@ -263,8 +266,8 @@ void * comms_Thread(void * input){
 									for (int n = 0; n < n_player; ++n) send(comms[n], &cfruit, sizeof (pos_board), 0);  
 									//pthread_mutex_unlock(&board_mutex);
 								}
-								else if(auxf == 2) d = 1;
 							}
+							if(auxf == 2) d = 1;
 						}
 	    			}
 				}
@@ -557,12 +560,18 @@ void * comms_Thread(void * input){
 				{
 					for (int j = 0; j < dim[0]; ++j)
 					{
-						printf("%c", ((pos_board**)input)[i][j].object);
+					
 						if(((pos_board**)input)[i][j].object == play.object && 
 						   ((pos_board**)input)[i][j].sock_id == play.sock_id &&
 						   ((pos_board**)input)[i][j].x_next != play.x_next &&
-						   ((pos_board**)input)[i][j].y_next != play.y_next)
+						   ((pos_board**)input)[i][j].y_next != play.y_next){
 							((pos_board**)input)[i][j] = clean;
+							safe.x_next = j;
+							safe.y_next = i;
+							for (int i = 0; i < n_player; ++i) send(comms[i], &clean, sizeof (pos_board), 0);
+						}
+						printf("%c", ((pos_board**)input)[i][j].object);
+							
 					}
 					printf("\n");
 				}
@@ -573,6 +582,7 @@ void * comms_Thread(void * input){
     		else{
     			play.x_next = play.x;
 				play.y_next = play.y;
+
 				for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
     		}
     	}
@@ -663,8 +673,8 @@ void * thirty_reset(void * input){
 			countp[k] = 0;
 			countm[k] = 0;
 		
-			min_aux = (actual_time - begin_time)%30;
-			min_1 = (actual_time+1 - begin_time)%30;
+			min_aux = (actual_time - begin_time)%10;
+			min_1 = (actual_time+1 - begin_time)%10;
 
 			pthread_mutex_lock(&board_mutex);
 			for (int i = 0; i < dim[1]; ++i){
