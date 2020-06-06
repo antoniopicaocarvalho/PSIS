@@ -171,8 +171,6 @@ void * comms_Thread(void * input){
 	pos_board clean;
 	clean.object = ' ';
 
-
-
 	int sock = comms[n_player-1];
 
 	int k = total_p;
@@ -273,7 +271,7 @@ void * comms_Thread(void * input){
 			}	
 			printf("\n-- Saiu um jogador (Total: %d) --\n", n_player);
     	}
-    	else{  
+    	else{
     		if ((countp[k] < 2 && play.object == 'P') || (countm[k] < 2 && play.object == 'M')||(countp[k] < 2 && play.object == 'S')){
 
     			//array that informs when board values are updated
@@ -552,27 +550,31 @@ void * comms_Thread(void * input){
 				}
 				printf("move to: %d-%d\n", play.x_next, play.y_next);
 				m = 0;
+
+				//PRINT BOARD
+				printf("------------board--------------\n");
+				for (int i = 0; i < dim[1]; ++i)
+				{
+					for (int j = 0; j < dim[0]; ++j)
+					{
+						printf("%c", ((pos_board**)input)[i][j].object);
+						if(((pos_board**)input)[i][j].object == play.object && 
+						   ((pos_board**)input)[i][j].sock_id == play.sock_id &&
+						   ((pos_board**)input)[i][j].x_next != play.x_next &&
+						   ((pos_board**)input)[i][j].y_next != play.y_next)
+							((pos_board**)input)[i][j] = clean;
+					}
+					printf("\n");
+				}
+				printf("--------------------------------\n\n");
+
     		}
     		//DOESN'T MOVE
     		else{
     			play.x_next = play.x;
 				play.y_next = play.y;
 				for (int i = 0; i < n_player; ++i) send(comms[i], &play, sizeof (pos_board), 0);
-
     		}
-
-	    	//PRINT BOARD
-			printf("--------------------------------\n");
-			for (int i = 0; i < dim[1]; ++i)
-			{
-				for (int j = 0; j < dim[0]; ++j)
-				{
-					printf("%c", ((pos_board**)input)[i][j].object);
-				}
-				printf("\n");
-			}
-			printf("--------------------------------\n\n");
-
     	}
 
     	pthread_mutex_unlock(&board_mutex);
