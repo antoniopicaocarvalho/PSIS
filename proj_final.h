@@ -15,9 +15,7 @@
 
 #define MAX_SIZE 300
 
-//ESTRUTURAS
-
-
+//STRUCTS
 typedef struct pos_board{
 	char object;
 	int sock_id;
@@ -31,7 +29,8 @@ typedef struct pos_board{
 	int y; 
 	int time;
 
-	int points;
+	int k;
+
 }pos_board;
 
 typedef struct colour{
@@ -39,7 +38,6 @@ typedef struct colour{
 	int g;
 	int b;
 }colour;
-
 
 typedef struct play{
 	int x;
@@ -67,7 +65,7 @@ typedef struct sock_adds{
 
 
 
-//----------------------------SERVIDOR----------------------------
+//----------------------------SERVER----------------------------
 
 pos_board ** board_read();
 
@@ -84,13 +82,7 @@ void * comms_Thread(void * input);
 void * thirty_reset(void * input);
 
 void spawn_fruits (int n_player, pos_board ** new_board);
-/*
-player_id * list_player(player_id * new_player, player_id* head);
 
-player_id* find_player (player_id * head, pid_t npid);
-
-void send_spawn(player_id * player, player_id * head);
-*/
 
 //-----------------------------CLIENT-----------------------------
 
