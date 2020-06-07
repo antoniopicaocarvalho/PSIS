@@ -95,7 +95,7 @@ int main(int argc, char * argv[]){
 	//printf("pos %d - %d \n", pac.x, pac.y);
 
 	int x_new, y_new, x_pac, y_pac, x_new_m, y_new_m, x_mon, y_mon;
-	
+
 
 	while (!done){
 		while (SDL_PollEvent(&event)) {
@@ -111,8 +111,6 @@ int main(int argc, char * argv[]){
 			//when the mouse mooves the pacman also moves
 			if(event.type == SDL_MOUSEMOTION){
 
-				pos_board jogada_p;
-
 				//prev pos
 				x_pac = pac.x_next;
 				y_pac = pac.y_next;
@@ -126,14 +124,7 @@ int main(int argc, char * argv[]){
 					((x_new - x_pac == 0) && (y_new - y_pac == 1)) || 
 					((x_new - x_pac == 0) && (y_new - y_pac == -1)) ){
 
-					//pos_board jogada_p = check_new_pos(x_new, y_new, x_pac, y_pac, board, dim);
-					
-					jogada_p.object = pac.object;
-					jogada_p.sock_id = pac.sock_id;
-
-					jogada_p.r = pac.r;
-					jogada_p.g = pac.g;
-					jogada_p.b = pac.b;
+					pos_board jogada_p = pac;
 
 					jogada_p.x = x_pac;
 					jogada_p.y = y_pac;
@@ -146,7 +137,7 @@ int main(int argc, char * argv[]){
 			//Setas
 			if(event.type == SDL_KEYDOWN){
 
-				pos_board jogada_m;
+				pos_board jogada_m=mon;
 
 				if (event.key.keysym.sym == SDLK_LEFT ){
 
@@ -154,15 +145,6 @@ int main(int argc, char * argv[]){
 					y_new_m = mon.y_next;
 					x_mon = mon.x_next;
 					y_mon = mon.y_next;
-
-					//pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
-
-					jogada_m.object = mon.object;
-					jogada_m.sock_id = mon.sock_id;
-
-					jogada_m.r = mon.r;
-					jogada_m.g = mon.g;
-					jogada_m.b = mon.b;
 
 					jogada_m.x = x_mon;
 					jogada_m.y = y_mon;
@@ -178,15 +160,6 @@ int main(int argc, char * argv[]){
 					x_mon = mon.x_next;
 					y_mon = mon.y_next;
 
-					//pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
-
-					jogada_m.object = mon.object;
-					jogada_m.sock_id = mon.sock_id;
-
-					jogada_m.r = mon.r;
-					jogada_m.g = mon.g;
-					jogada_m.b = mon.b;
-
 					jogada_m.x = x_mon;
 					jogada_m.y = y_mon;
 					jogada_m.x_next = x_new_m;
@@ -201,15 +174,6 @@ int main(int argc, char * argv[]){
 					x_mon = mon.x_next;
 					y_mon = mon.y_next;
 
-					//pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
-
-					jogada_m.object = mon.object;
-					jogada_m.sock_id = mon.sock_id;
-
-					jogada_m.r = mon.r;
-					jogada_m.g = mon.g;
-					jogada_m.b = mon.b;
-
 					jogada_m.x = x_mon;
 					jogada_m.y = y_mon;
 					jogada_m.x_next = x_new_m;
@@ -223,15 +187,6 @@ int main(int argc, char * argv[]){
 					y_new_m = mon.y_next+1;
 					x_mon = mon.x_next;
 					y_mon = mon.y_next;
-
-					//pos_board jogada_m = check_new_pos(x_new_m, y_new_m, x_mon, y_mon, board, dim);
-
-					jogada_m.object = mon.object;
-					jogada_m.sock_id = mon.sock_id;
-
-					jogada_m.r = mon.r;
-					jogada_m.g = mon.g;
-					jogada_m.b = mon.b;
 
 					jogada_m.x = x_mon;
 					jogada_m.y = y_mon;
@@ -261,17 +216,17 @@ void * sync_receiver(){
 	int scoreboard[2][MAX_SIZE];
 	int n_players;
 
-	/*
+	
 	pthread_mutex_t board_mutex;
 	if (pthread_mutex_init(&board_mutex, NULL) != 0)
     {
         printf("\n mutex init failed\n");
         exit(-1);
-    } */
+    } 
 
 	while(err_rcv = recv(sock_fd, &msg1, sizeof(pos_board), 0)>0){
 
-		//pthread_mutex_lock(&board_mutex);
+		pthread_mutex_lock(&board_mutex);
 
     	if (msg1.object == 'P' || msg1.object == 'S'){
 			
@@ -308,7 +263,7 @@ void * sync_receiver(){
 			paint_cherry(msg1.x, msg1.y);
 		}
 		else if(msg1.object == 'x') printf("\n***** SCORE BOARD *****\n");
-		else if(msg1.object == 'X') printf("- Player %d : %d pts\n", msg1.sock_id-3, msg1.points);
+		else if(msg1.object == 'X') printf("- Player %d : %d pts\n", (msg1.sock_id)-3, msg1.k);
 		else if(msg1.object == 'Y'){
 			printf("NOT ABLE TO JOIN\n");
 			done = SDL_TRUE;
@@ -316,7 +271,7 @@ void * sync_receiver(){
 			flag2=1; 
 		} 
 		
-		//pthread_mutex_unlock(&board_mutex);
+		pthread_mutex_unlock(&board_mutex);
 
 	}
 

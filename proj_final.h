@@ -31,7 +31,8 @@ typedef struct pos_board{
 	int y; 
 	int time;
 
-	int points;
+	int k;
+
 }pos_board;
 
 typedef struct colour{

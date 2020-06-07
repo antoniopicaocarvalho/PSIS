@@ -27,8 +27,7 @@
      perror("bind");
      exit(-1);
     }
-    // Informa que o socket foi creado e ligado a um nome 
-    printf("\nsocket created and binded \n");  
+    // Informa que o socket foi creado e ligado a um nome  
     return sock_fd;
   }
 // -----------------Listen----------------------------------------------------------------
@@ -58,7 +57,6 @@
         printf("Error connecting\n");
         exit(-1);}
     // indica que o cliente se conectou
-    printf("Client connected\n");
     return sock_fd;
   }
 
